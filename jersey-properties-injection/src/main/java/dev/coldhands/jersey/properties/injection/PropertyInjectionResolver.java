@@ -24,6 +24,10 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
+
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
     @Inject
@@ -31,16 +35,28 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
-        final Property propertyAnnotation = injectee.getParent().getAnnotation(Property.class);
+        final Property propertyAnnotation = locateAnnotation(injectee);
         final String propertyName = propertyAnnotation.value();
 
         return propertyResolverProvider.get()
                 .getProperty(propertyName);
     }
 
+    private Property locateAnnotation(Injectee injectee) {
+        final AnnotatedElement parent = injectee.getParent();
+
+        if (parent instanceof Constructor<?> constructor) {
+            final Parameter[] parameters = constructor.getParameters();
+            final Parameter paramToInject = parameters[injectee.getPosition()];
+            return paramToInject.getAnnotation(Property.class);
+        } else {
+            return parent.getAnnotation(Property.class);
+        }
+    }
+
     @Override
     public boolean isConstructorParameterIndicator() {
-        return false;
+        return true;
     }
 
     @Override

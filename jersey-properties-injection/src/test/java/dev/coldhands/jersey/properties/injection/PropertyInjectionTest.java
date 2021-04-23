@@ -28,7 +28,8 @@ import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -54,13 +55,15 @@ class PropertyInjectionTest {
         }
     }
 
-    @Test
-    void whenStringFieldIsAnnotatedWithProperty_thenPopulateFieldWithTheValueFoundInThePropertyResolver() throws IOException, InterruptedException {
+    @ParameterizedTest
+    @ValueSource(strings = {"stringField", "stringConstructorArgument"})
+    void whenAnnotatedWithProperty_thenInjectWithTheValueFoundInThePropertyResolver(String injectionLocation) throws IOException, InterruptedException {
         final String randomPortNumber = Integer.toString(new Random().nextInt());
 
         final var config = new ResourceConfig()
-                .register(PropertyLookupResource.class)
-                .register(new PropertyResolverFeature(propertyName -> Map.of("port", randomPortNumber).get(propertyName)))
+                .register(FieldInjectionPropertyLookupResource.class)
+                .register(ConstructorInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(propertyName -> Map.of(injectionLocation, randomPortNumber).get(propertyName)))
                 .register(PropertyInjectionFeature.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
@@ -69,7 +72,7 @@ class PropertyInjectionTest {
                 HttpRequest.newBuilder()
                         .GET()
                         .uri(UriBuilder.fromUri(baseUri)
-                                .path("/property")
+                                .path("/" + injectionLocation)
                                 .build())
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
@@ -78,16 +81,32 @@ class PropertyInjectionTest {
         assertThat(response.body()).isEqualTo(randomPortNumber);
     }
 
-    @Path("/property")
-    public static class PropertyLookupResource {
+    @Path("/stringField")
+    public static class FieldInjectionPropertyLookupResource {
 
-        @Property("port")
-        private String port;
+        @Property("stringField")
+        private String stringField;
 
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public Response lookupProperty() {
-            return Response.ok().entity(port).build();
+            return Response.ok().entity(stringField).build();
+        }
+    }
+
+    @Path("/stringConstructorArgument")
+    public static class ConstructorInjectionPropertyLookupResource {
+
+        private final String stringConstructorArgument;
+
+        public ConstructorInjectionPropertyLookupResource(@Property("stringConstructorArgument") String stringConstructorArgument) {
+            this.stringConstructorArgument = stringConstructorArgument;
+        }
+
+        @GET
+        @Produces(MediaType.TEXT_PLAIN)
+        public Response lookupProperty() {
+            return Response.ok().entity(stringConstructorArgument).build();
         }
     }
 
