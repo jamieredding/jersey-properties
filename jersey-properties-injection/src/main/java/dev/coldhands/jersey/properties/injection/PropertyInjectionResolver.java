@@ -33,13 +33,17 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     @Inject
     private Provider<PropertyResolver> propertyResolverProvider;
 
+    @Inject
+    private Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
+
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
         final Property propertyAnnotation = locateAnnotation(injectee);
         final String propertyName = propertyAnnotation.value();
 
         return propertyResolverProvider.get()
-                .getProperty(propertyName);
+                .getOptionalProperty(propertyName)
+                .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
     }
 
     private Property locateAnnotation(Injectee injectee) {

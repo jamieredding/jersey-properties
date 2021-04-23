@@ -25,11 +25,23 @@ import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 class PropertyInjectionFeature implements Feature {
+
+    private final ResolutionFailureBehaviour resolutionFailureBehaviour;
+
+    public PropertyInjectionFeature() {
+        this(ResolutionFailureBehaviour.defaultBehaviour());
+    }
+
+    public PropertyInjectionFeature(ResolutionFailureBehaviour resolutionFailureBehaviour) {
+        this.resolutionFailureBehaviour = resolutionFailureBehaviour;
+    }
+
     @Override
     public boolean configure(FeatureContext context) {
         context.register(new AbstractBinder() {
             @Override
             protected void configure() {
+                bind(resolutionFailureBehaviour).to(ResolutionFailureBehaviour.class);
                 bind(PropertyInjectionResolver.class)
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
