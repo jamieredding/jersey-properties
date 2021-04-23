@@ -21,7 +21,7 @@ import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-class PropertyResolverFeature implements Feature {
+public class PropertyResolverFeature implements Feature {
     private final PropertyResolver propertyResolver;
 
     public PropertyResolverFeature(PropertyResolver propertyResolver) {

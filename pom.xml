@@ -27,6 +27,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>jersey-properties-resolver</module>
+        <module>jersey-properties-injection</module>
     </modules>
 
     <properties>
@@ -44,6 +45,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>dev.coldhands</groupId>
+                <artifactId>jersey-properties-resolver</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>jakarta.ws.rs</groupId>
                 <artifactId>jakarta.ws.rs-api</artifactId>

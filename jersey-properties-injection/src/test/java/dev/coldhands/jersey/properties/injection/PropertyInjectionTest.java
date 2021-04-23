@@ -15,14 +15,13 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.injection;
 
 import com.sun.net.httpserver.HttpServer;
-import jakarta.inject.Inject;
+import dev.coldhands.jersey.properties.resolver.PropertyResolverFeature;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
@@ -37,13 +36,13 @@ import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
+import java.util.Random;
 
 import static java.net.http.HttpClient.newHttpClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PropertyResolverFeatureTest {
+class PropertyInjectionTest {
 
     private final URI baseUri = UriBuilder.fromUri("http://localhost/").port(anyOpenPort()).build();
     private HttpServer httpServer;
@@ -56,10 +55,13 @@ class PropertyResolverFeatureTest {
     }
 
     @Test
-    void whenPassedAPropertyResolver_thenRegisterThisResolverForInjectionIntoOtherClasses() throws IOException, InterruptedException {
+    void whenStringFieldIsAnnotatedWithProperty_thenPopulateFieldWithTheValueFoundInThePropertyResolver() throws IOException, InterruptedException {
+        final String randomPortNumber = Integer.toString(new Random().nextInt());
+
         final var config = new ResourceConfig()
                 .register(PropertyLookupResource.class)
-                .register(new PropertyResolverFeature(propertyName -> Map.of("port", "8080").get(propertyName)));
+                .register(new PropertyResolverFeature(propertyName -> Map.of("port", randomPortNumber).get(propertyName)))
+                .register(PropertyInjectionFeature.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
@@ -68,27 +70,24 @@ class PropertyResolverFeatureTest {
                         .GET()
                         .uri(UriBuilder.fromUri(baseUri)
                                 .path("/property")
-                                .queryParam("name", "port")
                                 .build())
                         .build(),
-                BodyHandlers.ofString());
+                HttpResponse.BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).isEqualTo("8080");
+        assertThat(response.body()).isEqualTo(randomPortNumber);
     }
 
     @Path("/property")
     public static class PropertyLookupResource {
 
-        @Inject
-        PropertyResolver propertyResolver;
+        @Property("port")
+        private String port;
 
         @GET
         @Produces(MediaType.TEXT_PLAIN)
-        public Response lookupProperty(@QueryParam("name") String propertyName) {
-            return Response.ok()
-                    .entity(propertyResolver.getProperty(propertyName))
-                    .build();
+        public Response lookupProperty() {
+            return Response.ok().entity(port).build();
         }
     }
 

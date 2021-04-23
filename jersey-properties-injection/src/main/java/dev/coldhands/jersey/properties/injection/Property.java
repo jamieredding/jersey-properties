@@ -15,16 +15,14 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.injection;
 
-import java.util.Optional;
 
-import static java.util.Optional.ofNullable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public interface PropertyResolver {
-    String getProperty(String propertyName);
+@Retention(RetentionPolicy.RUNTIME)
+@interface Property {
 
-    default Optional<String> getOptionalProperty(String propertyName) {
-        return ofNullable(getProperty(propertyName));
-    }
+    String value();
 }

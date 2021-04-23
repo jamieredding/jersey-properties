@@ -15,16 +15,28 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.injection;
 
-import java.util.Optional;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.FeatureContext;
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import static java.util.Optional.ofNullable;
+class PropertyInjectionFeature implements Feature {
+    @Override
+    public boolean configure(FeatureContext context) {
+        context.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(PropertyInjectionResolver.class)
+                        .to(new TypeLiteral<InjectionResolver<Property>>() {
+                        })
+                        .in(Singleton.class);
+            }
+        });
 
-public interface PropertyResolver {
-    String getProperty(String propertyName);
-
-    default Optional<String> getOptionalProperty(String propertyName) {
-        return ofNullable(getProperty(propertyName));
+        return true;
     }
 }
