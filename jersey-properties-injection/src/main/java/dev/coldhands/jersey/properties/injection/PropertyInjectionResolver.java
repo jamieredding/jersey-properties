@@ -27,6 +27,7 @@ import org.glassfish.hk2.api.ServiceHandle;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -41,9 +42,15 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         final Property propertyAnnotation = locateAnnotation(injectee);
         final String propertyName = propertyAnnotation.value();
 
-        return propertyResolverProvider.get()
+        final String propertyValue = propertyResolverProvider.get()
                 .getOptionalProperty(propertyName)
                 .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
+
+        final Type requiredType = injectee.getRequiredType();
+        if (requiredType.getTypeName().equals(Integer.class.getTypeName())) {
+            return Integer.parseInt(propertyValue);
+        }
+        return propertyValue;
     }
 
     private Property locateAnnotation(Injectee injectee) {

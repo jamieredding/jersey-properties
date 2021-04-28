@@ -19,11 +19,6 @@ package dev.coldhands.jersey.properties.injection;
 
 import com.sun.net.httpserver.HttpServer;
 import dev.coldhands.jersey.properties.resolver.PropertyResolverFeature;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -36,7 +31,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -44,14 +40,21 @@ import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
 
 import static java.net.http.HttpClient.newHttpClient;
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class PropertyInjectionTest {
+
+    private static final Map<String, String> PROPERTIES = Map.ofEntries(
+            entry("stringField", "abc"),
+            entry("integerField", "123"));
 
     private final URI baseUri = UriBuilder.fromUri("http://localhost/").port(anyOpenPort()).build();
     private HttpServer httpServer;
@@ -64,14 +67,11 @@ class PropertyInjectionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"stringField", "stringConstructorArgument"})
-    void whenAnnotatedWithProperty_thenInjectWithTheValueFoundInThePropertyResolver(String injectionLocation) throws IOException, InterruptedException {
-        final String randomPortNumber = Integer.toString(new Random().nextInt());
-
+    @MethodSource("fieldNameToValueAndType")
+    void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver<?> typeResolver, Class<?> expectedClassType) throws IOException, InterruptedException {
         final var config = new ResourceConfig()
-                .register(FieldInjectionPropertyLookupResource.class)
-                .register(ConstructorInjectionPropertyLookupResource.class)
-                .register(new PropertyResolverFeature(propertyName -> Map.of(injectionLocation, randomPortNumber).get(propertyName)))
+                .register(TestResources.FieldInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(PROPERTIES::get))
                 .register(PropertyInjectionFeature.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
@@ -80,13 +80,51 @@ class PropertyInjectionTest {
                 HttpRequest.newBuilder()
                         .GET()
                         .uri(UriBuilder.fromUri(baseUri)
-                                .path("/" + injectionLocation)
+                                .path("/fieldInjection")
+                                .queryParam("type", fieldName)
                                 .build())
                         .build(),
-                HttpResponse.BodyHandlers.ofString());
+                BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).isEqualTo(randomPortNumber);
+        assertThat(typeResolver.resolve(response.body())).isEqualTo(typeResolver.resolve(PROPERTIES.get(fieldName)));
+        assertThat(response.headers().firstValue("javaClass")).hasValue(expectedClassType.getName());
+    }
+
+    @ParameterizedTest
+    @MethodSource("fieldNameToValueAndType")
+    void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver<?> typeResolver, Class<?> expectedClassType) throws IOException, InterruptedException {
+        final var config = new ResourceConfig()
+                .register(TestResources.ConstructorInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(PROPERTIES::get))
+                .register(PropertyInjectionFeature.class);
+
+        httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+
+        final HttpResponse<String> response = newHttpClient().send(
+                HttpRequest.newBuilder()
+                        .GET()
+                        .uri(UriBuilder.fromUri(baseUri)
+                                .path("/constructorInjection")
+                                .queryParam("type", fieldName)
+                                .build())
+                        .build(),
+                BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(typeResolver.resolve(response.body())).isEqualTo(typeResolver.resolve(PROPERTIES.get(fieldName)));
+        assertThat(response.headers().firstValue("javaClass")).hasValue(expectedClassType.getName());
+    }
+
+    @FunctionalInterface
+    interface TypeResolver<T> {
+        T resolve(String s);
+    }
+
+    static Stream<Arguments> fieldNameToValueAndType() {
+        return Stream.of(
+                arguments("stringField", (TypeResolver<String>) s -> s, String.class),
+                arguments("integerField", (TypeResolver<Integer>) Integer::parseInt, Integer.class));
     }
 
     @Nested
@@ -95,7 +133,7 @@ class PropertyInjectionTest {
         @Test
         void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
             final var config = new ResourceConfig()
-                    .register(FieldInjectionPropertyLookupResource.class)
+                    .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(PropertyInjectionFeature.class);
 
@@ -105,13 +143,13 @@ class PropertyInjectionTest {
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/stringField")
+                                    .path("/missingProperty")
                                     .build())
                             .build(),
-                    HttpResponse.BodyHandlers.ofString());
+                    BodyHandlers.ofString());
 
             assertThat(response.statusCode()).isEqualTo(200);
-            assertThat(response.body()).isEqualTo("stringField");
+            assertThat(response.body()).isEqualTo("propertyName");
         }
 
         @Test
@@ -119,7 +157,7 @@ class PropertyInjectionTest {
             final var countDownLatch = new CountDownLatch(1);
             final var exceptionCapture = new ExceptionCapture();
             final var config = new ResourceConfig()
-                    .register(FieldInjectionPropertyLookupResource.class)
+                    .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(new PropertyInjectionFeature(ResolutionFailureBehaviour.throwException()))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture));
@@ -130,10 +168,10 @@ class PropertyInjectionTest {
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/stringField")
+                                    .path("/missingProperty")
                                     .build())
                             .build(),
-                    HttpResponse.BodyHandlers.ofString());
+                    BodyHandlers.ofString());
 
             countDownLatch.await();
             final Throwable actualException = exceptionCapture.getException();
@@ -145,14 +183,14 @@ class PropertyInjectionTest {
                     .anySatisfy(throwable ->
                             assertThat(throwable)
                                     .isInstanceOf(MissingPropertyException.class)
-                                    .hasMessage("Could not find property with name: stringField"));
+                                    .hasMessage("Could not find property with name: propertyName"));
 
         }
 
         @Test
         void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
             final var config = new ResourceConfig()
-                    .register(FieldInjectionPropertyLookupResource.class)
+                    .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value"));
 
@@ -162,13 +200,13 @@ class PropertyInjectionTest {
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/stringField")
+                                    .path("/missingProperty")
                                     .build())
                             .build(),
-                    HttpResponse.BodyHandlers.ofString());
+                    BodyHandlers.ofString());
 
             assertThat(response.statusCode()).isEqualTo(200);
-            assertThat(response.body()).isEqualTo("stringField-value");
+            assertThat(response.body()).isEqualTo("propertyName-value");
         }
 
         private static class ExceptionCapture {
@@ -184,7 +222,7 @@ class PropertyInjectionTest {
         }
 
         private static record AssertingRequestEventListener(CountDownLatch countDownLatch,
-                                                     ExceptionCapture exceptionCapture) implements ApplicationEventListener, RequestEventListener {
+                                                            ExceptionCapture exceptionCapture) implements ApplicationEventListener, RequestEventListener {
             @Override
             public void onEvent(ApplicationEvent applicationEvent) {
             }
@@ -201,35 +239,6 @@ class PropertyInjectionTest {
                     countDownLatch.countDown();
                 }
             }
-        }
-    }
-
-    @Path("/stringField")
-    public static class FieldInjectionPropertyLookupResource {
-
-        @Property("stringField")
-        private String stringField;
-
-        @GET
-        @Produces(MediaType.TEXT_PLAIN)
-        public Response lookupProperty() {
-            return Response.ok().entity(stringField).build();
-        }
-    }
-
-    @Path("/stringConstructorArgument")
-    public static class ConstructorInjectionPropertyLookupResource {
-
-        private final String stringConstructorArgument;
-
-        public ConstructorInjectionPropertyLookupResource(@Property("stringConstructorArgument") String stringConstructorArgument) {
-            this.stringConstructorArgument = stringConstructorArgument;
-        }
-
-        @GET
-        @Produces(MediaType.TEXT_PLAIN)
-        public Response lookupProperty() {
-            return Response.ok().entity(stringConstructorArgument).build();
         }
     }
 
