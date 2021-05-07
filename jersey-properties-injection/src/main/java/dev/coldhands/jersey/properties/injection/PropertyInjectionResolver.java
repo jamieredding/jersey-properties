@@ -27,7 +27,6 @@ import org.glassfish.hk2.api.ServiceHandle;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -36,6 +35,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
 
     @Inject
     private Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
+
+    @Inject
+    private DeserialiserRegistry deserialiserRegistry;
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
@@ -46,14 +48,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
                 .getOptionalProperty(propertyName)
                 .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
 
-        final Type requiredType = injectee.getRequiredType();
-        if (requiredType.getTypeName().equals(Integer.class.getTypeName())) {
-            return Integer.valueOf(propertyValue);
-        }
-        if (requiredType.getTypeName().equals(int.class.getTypeName())) {
-            return Integer.parseInt(propertyValue);
-        }
-        return propertyValue;
+        return deserialiserRegistry.findForType(injectee.getRequiredType().getTypeName())
+                .map(deserialiser -> deserialiser.deserialise(propertyValue))
+                .orElseThrow();
     }
 
     private Property locateAnnotation(Injectee injectee) {

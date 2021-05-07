@@ -46,6 +46,7 @@ class PropertyInjectionFeature implements Feature {
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
                         .in(Singleton.class);
+                bind(DeserialiserRegistry.defaultRegistry()).to(DeserialiserRegistry.class);
             }
         });
 
