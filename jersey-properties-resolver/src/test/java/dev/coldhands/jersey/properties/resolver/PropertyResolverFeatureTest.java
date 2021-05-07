@@ -18,6 +18,7 @@
 package dev.coldhands.jersey.properties.resolver;
 
 import com.sun.net.httpserver.HttpServer;
+import dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -26,21 +27,17 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 
+import static dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory.anyOpenPort;
 import static java.net.http.HttpClient.newHttpClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,12 +55,9 @@ class PropertyResolverFeatureTest {
 
     @Test
     void whenPassedAPropertyResolver_thenRegisterThisResolverForInjectionIntoOtherClasses() throws IOException, InterruptedException {
-        final var config = new ResourceConfig()
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(PropertyLookupResource.class)
-                .register(new PropertyResolverFeature(propertyName -> Map.of("port", "8080").get(propertyName)))
-                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-        httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                .register(new PropertyResolverFeature(propertyName -> Map.of("port", "8080").get(propertyName))));
 
         final HttpResponse<String> response = newHttpClient().send(
                 HttpRequest.newBuilder()
@@ -91,14 +85,6 @@ class PropertyResolverFeatureTest {
             return Response.ok()
                     .entity(propertyResolver.getProperty(propertyName))
                     .build();
-        }
-    }
-
-    private int anyOpenPort() {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            return socket.getLocalPort();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Couldn't allocate a port", e);
         }
     }
 }

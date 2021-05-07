@@ -18,12 +18,10 @@
 package dev.coldhands.jersey.properties.injection;
 
 import com.sun.net.httpserver.HttpServer;
+import dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory;
 import dev.coldhands.jersey.properties.resolver.PropertyResolverFeature;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
@@ -36,8 +34,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -46,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
+import static dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory.anyOpenPort;
 import static java.net.http.HttpClient.newHttpClient;
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,13 +69,10 @@ class PropertyInjectionTest {
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
     void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
-        final var config = new ResourceConfig()
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(TestResources.FieldInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class)
-                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-        httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                .register(PropertyInjectionFeature.class));
 
         final HttpResponse<String> response = newHttpClient().send(
                 HttpRequest.newBuilder()
@@ -98,13 +92,10 @@ class PropertyInjectionTest {
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
     void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
-        final var config = new ResourceConfig()
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(TestResources.ConstructorInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class)
-                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-        httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                .register(PropertyInjectionFeature.class));
 
         final HttpResponse<String> response = newHttpClient().send(
                 HttpRequest.newBuilder()
@@ -138,13 +129,10 @@ class PropertyInjectionTest {
 
         @Test
         void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
-            final var config = new ResourceConfig()
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(PropertyInjectionFeature.class)
-                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-            httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                    .register(PropertyInjectionFeature.class));
 
             final HttpResponse<String> response = newHttpClient().send(
                     HttpRequest.newBuilder()
@@ -163,14 +151,11 @@ class PropertyInjectionTest {
         void throwExceptionOnMissingPropertyBehaviour_whenPropertyIsMissing_thenThrowExceptionToCauseResolutionToFail() throws IOException, InterruptedException {
             final var countDownLatch = new CountDownLatch(1);
             final var exceptionCapture = new ExceptionCapture();
-            final var config = new ResourceConfig()
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(new PropertyInjectionFeature(ResolutionFailureBehaviour.throwException()))
-                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture))
-                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-            httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             newHttpClient().send(
                     HttpRequest.newBuilder()
@@ -197,13 +182,10 @@ class PropertyInjectionTest {
 
         @Test
         void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
-            final var config = new ResourceConfig()
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value"))
-                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
-
-            httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
+                    .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value")));
 
             final HttpResponse<String> response = newHttpClient().send(
                     HttpRequest.newBuilder()
@@ -248,14 +230,6 @@ class PropertyInjectionTest {
                     countDownLatch.countDown();
                 }
             }
-        }
-    }
-
-    private int anyOpenPort() {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            return socket.getLocalPort();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Couldn't allocate a port", e);
         }
     }
 }

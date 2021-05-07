@@ -28,6 +28,7 @@
     <modules>
         <module>jersey-properties-resolver</module>
         <module>jersey-properties-injection</module>
+        <module>jersey-properties-test-support</module>
     </modules>
 
     <properties>
@@ -46,6 +47,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>dev.coldhands</groupId>
+                <artifactId>jersey-properties-test-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>dev.coldhands</groupId>
                 <artifactId>jersey-properties-resolver</artifactId>
@@ -83,23 +89,21 @@
                 <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
+
             <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>
                 <artifactId>jersey-container-jdk-http</artifactId>
                 <version>${jersey.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.inject</groupId>
                 <artifactId>jersey-hk2</artifactId>
                 <version>${jersey.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
                 <version>${jakarta.activation-api.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
