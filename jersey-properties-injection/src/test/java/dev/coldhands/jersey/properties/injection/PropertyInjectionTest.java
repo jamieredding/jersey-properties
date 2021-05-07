@@ -54,7 +54,9 @@ class PropertyInjectionTest {
 
     private static final Map<String, String> PROPERTIES = Map.ofEntries(
             entry("stringField", "abc"),
-            entry("integerField", "123"));
+            entry("integerField", "123"),
+            entry("intField", "456")
+    );
 
     private final URI baseUri = UriBuilder.fromUri("http://localhost/").port(anyOpenPort()).build();
     private HttpServer httpServer;
@@ -68,7 +70,7 @@ class PropertyInjectionTest {
 
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
-    void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver<?> typeResolver, Class<?> expectedClassType) throws IOException, InterruptedException {
+    void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         final var config = new ResourceConfig()
                 .register(TestResources.FieldInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
@@ -88,12 +90,12 @@ class PropertyInjectionTest {
 
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(typeResolver.resolve(response.body())).isEqualTo(typeResolver.resolve(PROPERTIES.get(fieldName)));
-        assertThat(response.headers().firstValue("javaClass")).hasValue(expectedClassType.getName());
+        assertThat(response.headers().firstValue("javaType")).hasValue(expectedJavaType.getTypeName());
     }
 
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
-    void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver<?> typeResolver, Class<?> expectedClassType) throws IOException, InterruptedException {
+    void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         final var config = new ResourceConfig()
                 .register(TestResources.ConstructorInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
@@ -113,18 +115,19 @@ class PropertyInjectionTest {
 
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(typeResolver.resolve(response.body())).isEqualTo(typeResolver.resolve(PROPERTIES.get(fieldName)));
-        assertThat(response.headers().firstValue("javaClass")).hasValue(expectedClassType.getName());
+        assertThat(response.headers().firstValue("javaType")).hasValue(expectedJavaType.getTypeName());
     }
 
     @FunctionalInterface
-    interface TypeResolver<T> {
-        T resolve(String s);
+    interface TypeResolver {
+        Object resolve(String s);
     }
 
     static Stream<Arguments> fieldNameToValueAndType() {
         return Stream.of(
-                arguments("stringField", (TypeResolver<String>) s -> s, String.class),
-                arguments("integerField", (TypeResolver<Integer>) Integer::parseInt, Integer.class));
+                arguments("stringField", (TypeResolver) s -> s, String.class),
+                arguments("integerField", (TypeResolver) Integer::valueOf, Integer.class),
+                arguments("intField", (TypeResolver) Integer::parseInt, Integer.class));
     }
 
     @Nested

@@ -48,6 +48,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
 
         final Type requiredType = injectee.getRequiredType();
         if (requiredType.getTypeName().equals(Integer.class.getTypeName())) {
+            return Integer.valueOf(propertyValue);
+        }
+        if (requiredType.getTypeName().equals(int.class.getTypeName())) {
             return Integer.parseInt(propertyValue);
         }
         return propertyValue;

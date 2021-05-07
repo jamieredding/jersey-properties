@@ -50,10 +50,13 @@ class TestResources {
         @Property("integerField")
         private Integer integerField;
 
+        @Property("intField")
+        private int intField;
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public Response lookupProperty(@QueryParam("type") String type) {
-            return getResponse(type, stringField, integerField);
+            return getResponse(type, stringField, integerField, intField);
         }
     }
 
@@ -62,29 +65,33 @@ class TestResources {
 
         private final String stringField;
         private final Integer integerField;
+        private final int intField;
 
         public ConstructorInjectionPropertyLookupResource(@Property("stringField") String stringField,
-                                                          @Property("integerField") Integer integerField) {
+                                                          @Property("integerField") Integer integerField,
+                                                          @Property("intField") int intField) {
             this.stringField = stringField;
             this.integerField = integerField;
+            this.intField = intField;
         }
 
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public Response lookupProperty(@QueryParam("type") String type) {
-            return getResponse(type, stringField, integerField);
+            return getResponse(type, stringField, integerField, intField);
         }
     }
 
-    private static Response getResponse(String type, String stringField, Integer integerField) {
+    private static Response getResponse(String type, String stringField, Integer integerField, int intField) {
         final Object entity = switch (type) {
             case "stringField" -> stringField;
             case "integerField" -> integerField;
+            case "intField" -> intField;
             default -> throw new IllegalArgumentException(type + " is not a supported type");
         };
         return Response.ok()
                 .entity(entity)
-                .header("javaClass", entity.getClass().getName())
+                .header("javaType", entity.getClass().getTypeName())
                 .build();
     }
 }
