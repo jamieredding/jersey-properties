@@ -28,6 +28,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +60,8 @@ class PropertyResolverFeatureTest {
     void whenPassedAPropertyResolver_thenRegisterThisResolverForInjectionIntoOtherClasses() throws IOException, InterruptedException {
         final var config = new ResourceConfig()
                 .register(PropertyLookupResource.class)
-                .register(new PropertyResolverFeature(propertyName -> Map.of("port", "8080").get(propertyName)));
+                .register(new PropertyResolverFeature(propertyName -> Map.of("port", "8080").get(propertyName)))
+                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 

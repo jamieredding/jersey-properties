@@ -23,6 +23,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
@@ -74,7 +75,8 @@ class PropertyInjectionTest {
         final var config = new ResourceConfig()
                 .register(TestResources.FieldInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class);
+                .register(PropertyInjectionFeature.class)
+                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
@@ -99,7 +101,8 @@ class PropertyInjectionTest {
         final var config = new ResourceConfig()
                 .register(TestResources.ConstructorInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class);
+                .register(PropertyInjectionFeature.class)
+                .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
         httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
@@ -138,7 +141,8 @@ class PropertyInjectionTest {
             final var config = new ResourceConfig()
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(PropertyInjectionFeature.class);
+                    .register(PropertyInjectionFeature.class)
+                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
             httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
@@ -163,7 +167,8 @@ class PropertyInjectionTest {
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(new PropertyInjectionFeature(ResolutionFailureBehaviour.throwException()))
-                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture));
+                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture))
+                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
             httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
@@ -195,7 +200,8 @@ class PropertyInjectionTest {
             final var config = new ResourceConfig()
                     .register(TestResources.MissingPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value"));
+                    .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value"))
+                    .property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
             httpServer = JdkHttpServerFactory.createHttpServer(baseUri, config);
 
