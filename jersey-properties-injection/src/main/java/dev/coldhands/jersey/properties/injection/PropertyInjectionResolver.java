@@ -50,7 +50,13 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
 
         final String injecteeTypeName = injectee.getRequiredType().getTypeName();
         return deserialiserRegistry.findForType(injecteeTypeName)
-                .map(deserialiser -> deserialiser.deserialise(propertyValue))
+                .map(deserialiser -> {
+                    try {
+                        return deserialiser.deserialise(propertyValue);
+                    } catch (Exception e) {
+                        throw new DeserialiserException(propertyName, propertyValue, injecteeTypeName, e);
+                    }
+                })
                 .orElseThrow(() -> new MissingDeserialiserException(injecteeTypeName));
     }
 

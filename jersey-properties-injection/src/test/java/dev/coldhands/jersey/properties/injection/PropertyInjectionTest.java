@@ -238,4 +238,46 @@ class PropertyInjectionTest {
 
         }
     }
+
+    @Nested
+    class UnableToDeserialise {
+
+        @Test
+        void whenExceptionThrownWhileDeserialising_thenThrowExceptionToCauseResolutionToFail() throws IOException, InterruptedException {
+            final var countDownLatch = new CountDownLatch(1);
+            final var exceptionCapture = new ExceptionCapture();
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                    .register(StringPropertyLookupResource.class)
+                    .register(new PropertyResolverFeature(s -> "propertyValue"))
+                    .register(new PropertyInjectionFeature()
+                            .withDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> {
+                                throw new RuntimeException("Cannot deserialise a string.");
+                            }))))
+                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
+
+            newHttpClient().send(
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(UriBuilder.fromUri(baseUri)
+                                    .path("/stringProperty")
+                                    .build())
+                            .build(),
+                    BodyHandlers.ofString());
+
+            countDownLatch.await();
+            final Throwable actualException = exceptionCapture.getException();
+            assertThat(actualException).isInstanceOf(MultiException.class);
+            assertThat(((MultiException) actualException).getErrors())
+                    .anySatisfy(throwable ->
+                            assertThat(throwable).isInstanceOf(IllegalStateException.class)
+                                    .hasMessageContaining("Unable to perform operation: resolve"))
+                    .anySatisfy(throwable ->
+                            assertThat(throwable)
+                                    .isInstanceOf(DeserialiserException.class)
+                                    .hasMessage("Exception thrown while deserialising property: propertyName=propertyValue as type: " + String.class.getTypeName())
+                                    .getCause()
+                                    .hasMessage("Cannot deserialise a string."));
+
+        }
+    }
 }
