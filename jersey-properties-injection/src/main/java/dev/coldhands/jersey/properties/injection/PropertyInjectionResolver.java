@@ -27,6 +27,7 @@ import org.glassfish.hk2.api.ServiceHandle;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -44,20 +45,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         final Property propertyAnnotation = locateAnnotation(injectee);
         final String propertyName = propertyAnnotation.value();
 
-        final String propertyValue = propertyResolverProvider.get()
-                .getOptionalProperty(propertyName)
-                .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
+        final String propertyValue = lookupPropertyValue(propertyName);
 
-        final String injecteeTypeName = injectee.getRequiredType().getTypeName();
-        return deserialiserRegistry.findForType(injecteeTypeName)
-                .map(deserialiser -> {
-                    try {
-                        return deserialiser.deserialise(propertyValue);
-                    } catch (Exception e) {
-                        throw new DeserialiserException(propertyName, propertyValue, injecteeTypeName, e);
-                    }
-                })
-                .orElseThrow(() -> new MissingDeserialiserException(injecteeTypeName));
+        return deserialiseValueToCorrectType(propertyName, propertyValue, injectee.getRequiredType());
     }
 
     private Property locateAnnotation(Injectee injectee) {
@@ -70,6 +60,26 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         } else {
             return parent.getAnnotation(Property.class);
         }
+    }
+
+    private String lookupPropertyValue(String propertyName) {
+        return propertyResolverProvider.get()
+                .getOptionalProperty(propertyName)
+                .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
+    }
+
+    private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {
+        final String typeName = requiredType.getTypeName();
+
+        return deserialiserRegistry.findForType(typeName)
+                .map(deserialiser -> {
+                    try {
+                        return deserialiser.deserialise(propertyValue);
+                    } catch (Exception e) {
+                        throw new DeserialiserException(propertyName, propertyValue, typeName, e);
+                    }
+                })
+                .orElseThrow(() -> new MissingDeserialiserException(typeName));
     }
 
     @Override
