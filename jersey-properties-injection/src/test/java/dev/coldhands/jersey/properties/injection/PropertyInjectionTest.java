@@ -22,10 +22,6 @@ import dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory;
 import dev.coldhands.jersey.properties.resolver.PropertyResolverFeature;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.jersey.server.monitoring.ApplicationEvent;
-import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
-import org.glassfish.jersey.server.monitoring.RequestEvent;
-import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -43,6 +39,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
 import static dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory.anyOpenPort;
+import static dev.coldhands.jersey.properties.injection.TestResources.*;
 import static java.net.http.HttpClient.newHttpClient;
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,7 +67,7 @@ class PropertyInjectionTest {
     @MethodSource("fieldNameToValueAndType")
     void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                .register(TestResources.FieldInjectionPropertyLookupResource.class)
+                .register(FieldInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
                 .register(PropertyInjectionFeature.class));
 
@@ -93,7 +90,7 @@ class PropertyInjectionTest {
     @MethodSource("fieldNameToValueAndType")
     void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                .register(TestResources.ConstructorInjectionPropertyLookupResource.class)
+                .register(ConstructorInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
                 .register(PropertyInjectionFeature.class));
 
@@ -130,7 +127,7 @@ class PropertyInjectionTest {
         @Test
         void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                    .register(TestResources.MissingPropertyLookupResource.class)
+                    .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
                     .register(PropertyInjectionFeature.class));
 
@@ -138,7 +135,7 @@ class PropertyInjectionTest {
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/missingProperty")
+                                    .path("/stringProperty")
                                     .build())
                             .build(),
                     BodyHandlers.ofString());
@@ -152,16 +149,17 @@ class PropertyInjectionTest {
             final var countDownLatch = new CountDownLatch(1);
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                    .register(TestResources.MissingPropertyLookupResource.class)
+                    .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(new PropertyInjectionFeature(ResolutionFailureBehaviour.throwException()))
+                    .register(new PropertyInjectionFeature()
+                            .withResolutionFailureBehaviour(ResolutionFailureBehaviour.throwException()))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             newHttpClient().send(
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/missingProperty")
+                                    .path("/stringProperty")
                                     .build())
                             .build(),
                     BodyHandlers.ofString());
@@ -183,15 +181,16 @@ class PropertyInjectionTest {
         @Test
         void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                    .register(TestResources.MissingPropertyLookupResource.class)
+                    .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(new PropertyInjectionFeature(propertyName -> propertyName + "-value")));
+                    .register(new PropertyInjectionFeature()
+                            .withResolutionFailureBehaviour(propertyName -> propertyName + "-value")));
 
             final HttpResponse<String> response = newHttpClient().send(
                     HttpRequest.newBuilder()
                             .GET()
                             .uri(UriBuilder.fromUri(baseUri)
-                                    .path("/missingProperty")
+                                    .path("/stringProperty")
                                     .build())
                             .build(),
                     BodyHandlers.ofString());
@@ -200,36 +199,43 @@ class PropertyInjectionTest {
             assertThat(response.body()).isEqualTo("propertyName-value");
         }
 
-        private static class ExceptionCapture {
-            private Throwable exception;
+    }
 
-            void capture(Throwable exception) {
-                this.exception = exception;
-            }
+    @Nested
+    class MissingDeserialiser {
 
-            Throwable getException() {
-                return exception;
-            }
-        }
+        @Test
+        void whenNoDeserialiserConfiguredForThatType_thenThrowExceptionToCauseResolutionToFail() throws IOException, InterruptedException {
+            final var countDownLatch = new CountDownLatch(1);
+            final var exceptionCapture = new ExceptionCapture();
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                    .register(StringPropertyLookupResource.class)
+                    .register(new PropertyResolverFeature(PROPERTIES::get))
+                    .register(new PropertyInjectionFeature()
+                            .withDeserialiserRegistry(new DeserialiserRegistry(Map.of())))
+                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
-        private static record AssertingRequestEventListener(CountDownLatch countDownLatch,
-                                                            ExceptionCapture exceptionCapture) implements ApplicationEventListener, RequestEventListener {
-            @Override
-            public void onEvent(ApplicationEvent applicationEvent) {
-            }
+            newHttpClient().send(
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(UriBuilder.fromUri(baseUri)
+                                    .path("/stringProperty")
+                                    .build())
+                            .build(),
+                    BodyHandlers.ofString());
 
-            @Override
-            public RequestEventListener onRequest(RequestEvent requestEvent) {
-                return this;
-            }
+            countDownLatch.await();
+            final Throwable actualException = exceptionCapture.getException();
+            assertThat(actualException).isInstanceOf(MultiException.class);
+            assertThat(((MultiException) actualException).getErrors())
+                    .anySatisfy(throwable ->
+                            assertThat(throwable).isInstanceOf(IllegalStateException.class)
+                                    .hasMessageContaining("Unable to perform operation: resolve"))
+                    .anySatisfy(throwable ->
+                            assertThat(throwable)
+                                    .isInstanceOf(MissingDeserialiserException.class)
+                                    .hasMessage("No deserialiser configured for type: " + String.class.getTypeName()));
 
-            @Override
-            public void onEvent(RequestEvent requestEvent) {
-                if (requestEvent.getType() == RequestEvent.Type.ON_EXCEPTION) {
-                    exceptionCapture.capture(requestEvent.getException());
-                    countDownLatch.countDown();
-                }
-            }
         }
     }
 }

@@ -23,11 +23,17 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.server.monitoring.ApplicationEvent;
+import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
+import org.glassfish.jersey.server.monitoring.RequestEventListener;
+
+import java.util.concurrent.CountDownLatch;
 
 class TestResources {
 
-    @Path("/missingProperty")
-    public static class MissingPropertyLookupResource {
+    @Path("/stringProperty")
+    public static class StringPropertyLookupResource {
 
         @Property("propertyName")
         private String propertyValue;
@@ -93,5 +99,37 @@ class TestResources {
                 .entity(entity)
                 .header("javaType", entity.getClass().getTypeName())
                 .build();
+    }
+
+    static class ExceptionCapture {
+        private Throwable exception;
+
+        void capture(Throwable exception) {
+            this.exception = exception;
+        }
+
+        Throwable getException() {
+            return exception;
+        }
+    }
+
+    static record AssertingRequestEventListener(CountDownLatch countDownLatch,
+                                                ExceptionCapture exceptionCapture) implements ApplicationEventListener, RequestEventListener {
+        @Override
+        public void onEvent(ApplicationEvent applicationEvent) {
+        }
+
+        @Override
+        public RequestEventListener onRequest(RequestEvent requestEvent) {
+            return this;
+        }
+
+        @Override
+        public void onEvent(RequestEvent requestEvent) {
+            if (requestEvent.getType() == RequestEvent.Type.ON_EXCEPTION) {
+                exceptionCapture.capture(requestEvent.getException());
+                countDownLatch.countDown();
+            }
+        }
     }
 }

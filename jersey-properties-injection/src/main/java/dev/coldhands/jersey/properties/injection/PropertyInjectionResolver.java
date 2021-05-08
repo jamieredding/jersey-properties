@@ -48,9 +48,10 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
                 .getOptionalProperty(propertyName)
                 .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
 
-        return deserialiserRegistry.findForType(injectee.getRequiredType().getTypeName())
+        final String injecteeTypeName = injectee.getRequiredType().getTypeName();
+        return deserialiserRegistry.findForType(injecteeTypeName)
                 .map(deserialiser -> deserialiser.deserialise(propertyValue))
-                .orElseThrow();
+                .orElseThrow(() -> new MissingDeserialiserException(injecteeTypeName));
     }
 
     private Property locateAnnotation(Injectee injectee) {
