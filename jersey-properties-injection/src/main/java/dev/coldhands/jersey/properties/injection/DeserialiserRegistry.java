@@ -28,7 +28,21 @@ class DeserialiserRegistry {
     private static final DeserialiserRegistry DEFAULT_REGISTRY = new DeserialiserRegistry(Map.ofEntries(
             entry(String.class, s -> s),
             entry(Integer.class, Integer::parseInt),
-            entry(int.class, Integer::parseInt)
+            entry(int.class, Integer::parseInt),
+            entry(Long.class, Long::parseLong),
+            entry(long.class, Long::parseLong),
+            entry(Short.class, Short::parseShort),
+            entry(short.class, Short::parseShort),
+            entry(Float.class, Float::parseFloat),
+            entry(float.class, Float::parseFloat),
+            entry(Double.class, Double::parseDouble),
+            entry(double.class, Double::parseDouble),
+            entry(Boolean.class, Boolean::parseBoolean),
+            entry(boolean.class, Boolean::parseBoolean),
+            entry(Character.class, s -> s.charAt(0)),
+            entry(char.class, s -> s.charAt(0)),
+            entry(Byte.class, Byte::parseByte),
+            entry(byte.class, Byte::parseByte)
     ));
 
     public static DeserialiserRegistry defaultRegistry() {

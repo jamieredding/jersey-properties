@@ -68,7 +68,21 @@ class DeserialiserRegistryTest {
         return Stream.of(
                 arguments(String.class, "abc", "abc"),
                 arguments(Integer.class, "1", 1),
-                arguments(int.class, "1", 1)
+                arguments(int.class, "1", 1),
+                arguments(Long.class, String.valueOf(Integer.MAX_VALUE+1L), Integer.MAX_VALUE+1L),
+                arguments(long.class, String.valueOf(Integer.MAX_VALUE+1L), Integer.MAX_VALUE+1L),
+                arguments(Short.class, "1", (short) 1),
+                arguments(short.class, "1", (short) 1),
+                arguments(Float.class, "1.0", 1.0F),
+                arguments(float.class, "1.0", 1.0F),
+                arguments(Double.class, String.valueOf(Float.MAX_VALUE + 1.0D), Float.MAX_VALUE + 1.0D),
+                arguments(double.class, String.valueOf(Float.MAX_VALUE + 1.0D), Float.MAX_VALUE + 1.0D),
+                arguments(Boolean.class, "true", true),
+                arguments(boolean.class, "true", true),
+                arguments(Character.class, "a", 'a'),
+                arguments(char.class, "a", 'a'),
+                arguments(Byte.class, "1", (byte) 1),
+                arguments(byte.class, "1", (byte) 1)
         );
     }
 }
