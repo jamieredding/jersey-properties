@@ -22,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.*;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -82,7 +83,22 @@ class DeserialiserRegistryTest {
                 arguments(Character.class, "a", 'a'),
                 arguments(char.class, "a", 'a'),
                 arguments(Byte.class, "1", (byte) 1),
-                arguments(byte.class, "1", (byte) 1)
+                arguments(byte.class, "1", (byte) 1),
+
+                arguments(Duration.class, "PT48H", Duration.ofDays(2)),
+                arguments(Instant.class, "2021-05-10T18:50:05.684484732Z", Instant.ofEpochSecond(1620672605, 684484732)),
+                arguments(LocalDate.class, "2021-05-10", LocalDate.of(2021, 5, 10)),
+                arguments(LocalDateTime.class, "2021-05-10T19:50:00", LocalDateTime.of(2021, 5, 10, 19, 50)),
+                arguments(LocalTime.class, "19:50:01", LocalTime.of(19, 50, 1)),
+                arguments(MonthDay.class, "--05-10", MonthDay.of(5, 10)),
+                arguments(OffsetDateTime.class, "2021-05-10T19:50:07.054303449+01:00", OffsetDateTime.of(2021, 5, 10, 19, 50, 7, 54303449, ZoneOffset.ofHours(1))),
+                arguments(OffsetTime.class, "19:50:07.311069314+01:00", OffsetTime.of(19, 50, 7, 311069314, ZoneOffset.ofHours(1))),
+                arguments(Period.class, "P10Y", Period.ofYears(10)),
+                arguments(Year.class, "2021", Year.of(2021)),
+                arguments(YearMonth.class, "2021-05", YearMonth.of(2021, 5)),
+                arguments(ZonedDateTime.class, "2021-05-10T19:50:08.419688569+01:00[Europe/London]", ZonedDateTime.of(2021, 5, 10, 19, 50, 8, 419688569, ZoneId.of("Europe/London"))),
+                arguments(ZoneId.class, "Europe/London", ZoneId.of("Europe/London")),
+                arguments(ZoneOffset.class, "+10:00", ZoneOffset.ofHours(10))
         );
     }
 }

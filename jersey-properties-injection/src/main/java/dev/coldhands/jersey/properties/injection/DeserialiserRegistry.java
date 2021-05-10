@@ -17,6 +17,7 @@
 
 package dev.coldhands.jersey.properties.injection;
 
+import java.time.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +43,22 @@ class DeserialiserRegistry {
             entry(Character.class, s -> s.charAt(0)),
             entry(char.class, s -> s.charAt(0)),
             entry(Byte.class, Byte::parseByte),
-            entry(byte.class, Byte::parseByte)
+            entry(byte.class, Byte::parseByte),
+
+            entry(Duration.class, Duration::parse),
+            entry(Instant.class, Instant::parse),
+            entry(LocalDate.class, LocalDate::parse),
+            entry(LocalDateTime.class, LocalDateTime::parse),
+            entry(LocalTime.class, LocalTime::parse),
+            entry(MonthDay.class, MonthDay::parse),
+            entry(OffsetDateTime.class, OffsetDateTime::parse),
+            entry(OffsetTime.class, OffsetTime::parse),
+            entry(Period.class, Period::parse),
+            entry(Year.class, Year::parse),
+            entry(YearMonth.class, YearMonth::parse),
+            entry(ZonedDateTime.class, ZonedDateTime::parse),
+            entry(ZoneId.class, ZoneId::of),
+            entry(ZoneOffset.class, ZoneOffset::of)
     ));
 
     public static DeserialiserRegistry defaultRegistry() {
