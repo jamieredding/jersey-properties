@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,13 +56,12 @@ class DeserialiserRegistryTest {
 
     @ParameterizedTest
     @MethodSource("expectedTypeAndDeserialisedValue")
-    void defaultDeserialiserRegistrySupports(Class<?> expectedClass, String serialisedValue, Object expectedDeserialisedValue) {
-        assertThat(DeserialiserRegistry.defaultRegistry().findForType(expectedClass.getTypeName()))
-                .isPresent()
-                .get()
-                .satisfies(deserialiser ->
-                        assertThat(deserialiser.deserialise(serialisedValue)).isEqualTo(expectedDeserialisedValue)
-                );
+    void defaultDeserialiserRegistrySupports(Class<?> expectedClass, String serialisedValue, Object expectedDeserialisedValue) throws Exception {
+        final Optional<Deserialiser<?>> optionalDeserialiser = DeserialiserRegistry.defaultRegistry().findForType(expectedClass.getTypeName());
+
+        assertThat(optionalDeserialiser).isPresent();
+        assertThat(optionalDeserialiser.get().deserialise(serialisedValue))
+                .isEqualTo(expectedDeserialisedValue);
     }
 
     private static Stream<Arguments> expectedTypeAndDeserialisedValue() {
@@ -69,8 +69,8 @@ class DeserialiserRegistryTest {
                 arguments(String.class, "abc", "abc"),
                 arguments(Integer.class, "1", 1),
                 arguments(int.class, "1", 1),
-                arguments(Long.class, String.valueOf(Integer.MAX_VALUE+1L), Integer.MAX_VALUE+1L),
-                arguments(long.class, String.valueOf(Integer.MAX_VALUE+1L), Integer.MAX_VALUE+1L),
+                arguments(Long.class, String.valueOf(Integer.MAX_VALUE + 1L), Integer.MAX_VALUE + 1L),
+                arguments(long.class, String.valueOf(Integer.MAX_VALUE + 1L), Integer.MAX_VALUE + 1L),
                 arguments(Short.class, "1", (short) 1),
                 arguments(short.class, "1", (short) 1),
                 arguments(Float.class, "1.0", 1.0F),

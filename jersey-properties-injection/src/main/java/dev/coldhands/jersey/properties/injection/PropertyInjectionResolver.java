@@ -69,25 +69,26 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {
         final String typeName = requiredType.getTypeName();
 
-        final Optional<Deserialiser<?>> deserialiser = deserialiserRegistry.findForType(typeName);
-        if (deserialiser.isPresent()) {
-            try {
-                return deserialiser.get().deserialise(propertyValue);
-            } catch (Exception e) {
-                throw new DeserialiserException(propertyName, propertyValue, typeName, e);
-            }
-        } else {
-            final Class<?> typeAsClass = (Class<?>) requiredType;
-            if (typeAsClass.isEnum()) {
-                try {
-                    final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
-                    return method.invoke(typeAsClass, propertyValue);
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                    throw new DeserialiserException(propertyName, propertyValue, typeName, e);
-                }
-            }
-        }
-        throw new MissingDeserialiserException(typeName);
+        return getDeserialiser(requiredType, typeName)
+                .map(deserialiser -> {
+                    try {
+                        return deserialiser.deserialise(propertyValue);
+                    } catch (Exception e) {
+                        throw new DeserialiserException(propertyName, propertyValue, typeName, e);
+                    }
+                })
+                .orElseThrow(() -> new MissingDeserialiserException(typeName));
+    }
+
+    private Optional<Deserialiser<?>> getDeserialiser(Type requiredType, String typeName) {
+        return deserialiserRegistry.findForType(typeName)
+                .or(() -> {
+                    if (requiredType instanceof Class<?> typeAsClass && typeAsClass.isEnum()) {
+                        return Optional.of(new EnumDeserialiser(typeAsClass));
+                    } else {
+                        return Optional.empty();
+                    }
+                });
     }
 
     @Override
@@ -98,5 +99,19 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     @Override
     public boolean isMethodParameterIndicator() {
         return false;
+    }
+
+    private static class EnumDeserialiser implements Deserialiser<Object> {
+        private final Class<?> typeAsClass;
+
+        public EnumDeserialiser(Class<?> typeAsClass) {
+            this.typeAsClass = typeAsClass;
+        }
+
+        @Override
+        public Object deserialise(String propertyValue) throws Exception {
+            final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
+            return method.invoke(typeAsClass, propertyValue);
+        }
     }
 }
