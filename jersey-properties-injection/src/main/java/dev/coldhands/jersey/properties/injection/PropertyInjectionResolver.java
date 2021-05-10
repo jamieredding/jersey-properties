@@ -83,7 +83,7 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
                     final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
                     return method.invoke(typeAsClass, propertyValue);
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                    e.printStackTrace();
+                    throw new DeserialiserException(propertyName, propertyValue, typeName, e);
                 }
             }
         }

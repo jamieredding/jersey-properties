@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -51,7 +52,7 @@ class PropertyInjectionTest {
             entry("stringField", "abc"),
             entry("integerField", "123"),
             entry("intField", "456"),
-            entry("enumField", "VALUE")
+            entry("enumField", MyEnum.VALUE.name())
     );
 
     private final URI baseUri = UriBuilder.fromUri("http://localhost/").port(anyOpenPort()).build();
@@ -279,6 +280,44 @@ class PropertyInjectionTest {
                                     .hasMessage("Exception thrown while deserialising property: propertyName=propertyValue as type: " + String.class.getTypeName())
                                     .getCause()
                                     .hasMessage("Cannot deserialise a string."));
+
+        }
+
+        @Test
+        void whenExceptionThrownWhileAutomaticallyDeserialisingEnum_thenThrowExceptionToCauseResolutionToFail() throws IOException, InterruptedException {
+            final var countDownLatch = new CountDownLatch(1);
+            final var exceptionCapture = new ExceptionCapture();
+            final var expectedPropertyValue = "Value not in " + MyEnum.class;
+            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                    .register(InvalidEnumValueResource.class)
+                    .register(new PropertyResolverFeature(s -> expectedPropertyValue))
+                    .register(new PropertyInjectionFeature())
+                    .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
+
+            newHttpClient().send(
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(UriBuilder.fromUri(baseUri)
+                                    .path("/invalidEnum")
+                                    .build())
+                            .build(),
+                    BodyHandlers.ofString());
+
+            countDownLatch.await();
+            final Throwable actualException = exceptionCapture.getException();
+            assertThat(actualException).isInstanceOf(MultiException.class);
+            assertThat(((MultiException) actualException).getErrors())
+                    .anySatisfy(throwable ->
+                            assertThat(throwable).isInstanceOf(IllegalStateException.class)
+                                    .hasMessageContaining("Unable to perform operation: resolve"))
+                    .anySatisfy(throwable ->
+                            assertThat(throwable)
+                                    .isInstanceOf(DeserialiserException.class)
+                                    .hasMessage("Exception thrown while deserialising property: invalidEnum=" + expectedPropertyValue + " as type: " + MyEnum.class.getTypeName())
+                                    .getCause()
+                                    .isInstanceOf(InvocationTargetException.class)
+                                    .getCause()
+                                    .hasMessageContainingAll("No enum constant", MyEnum.class.getSimpleName(), expectedPropertyValue));
 
         }
     }
