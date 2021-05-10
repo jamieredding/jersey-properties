@@ -50,7 +50,8 @@ class PropertyInjectionTest {
     private static final Map<String, String> PROPERTIES = Map.ofEntries(
             entry("stringField", "abc"),
             entry("integerField", "123"),
-            entry("intField", "456")
+            entry("intField", "456"),
+            entry("enumField", "VALUE")
     );
 
     private final URI baseUri = UriBuilder.fromUri("http://localhost/").port(anyOpenPort()).build();
@@ -118,7 +119,8 @@ class PropertyInjectionTest {
         return Stream.of(
                 arguments("stringField", (TypeResolver) s -> s, String.class),
                 arguments("integerField", (TypeResolver) Integer::valueOf, Integer.class),
-                arguments("intField", (TypeResolver) Integer::parseInt, Integer.class));
+                arguments("intField", (TypeResolver) Integer::parseInt, Integer.class),
+                arguments("enumField", (TypeResolver) MyEnum::valueOf, MyEnum.class));
     }
 
     @Nested

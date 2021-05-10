@@ -24,10 +24,8 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
+import java.util.Optional;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -71,15 +69,25 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {
         final String typeName = requiredType.getTypeName();
 
-        return deserialiserRegistry.findForType(typeName)
-                .map(deserialiser -> {
-                    try {
-                        return deserialiser.deserialise(propertyValue);
-                    } catch (Exception e) {
-                        throw new DeserialiserException(propertyName, propertyValue, typeName, e);
-                    }
-                })
-                .orElseThrow(() -> new MissingDeserialiserException(typeName));
+        final Optional<Deserialiser<?>> deserialiser = deserialiserRegistry.findForType(typeName);
+        if (deserialiser.isPresent()) {
+            try {
+                return deserialiser.get().deserialise(propertyValue);
+            } catch (Exception e) {
+                throw new DeserialiserException(propertyName, propertyValue, typeName, e);
+            }
+        } else {
+            final Class<?> typeAsClass = (Class<?>) requiredType;
+            if (typeAsClass.isEnum()) {
+                try {
+                    final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
+                    return method.invoke(typeAsClass, propertyValue);
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        throw new MissingDeserialiserException(typeName);
     }
 
     @Override

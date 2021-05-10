@@ -47,6 +47,10 @@ class TestResources {
         }
     }
 
+    public enum MyEnum {
+        VALUE
+    }
+
     @Path("/fieldInjection")
     public static class FieldInjectionPropertyLookupResource {
 
@@ -59,10 +63,13 @@ class TestResources {
         @Property("intField")
         private int intField;
 
+        @Property("enumField")
+        private MyEnum enumField;
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public Response lookupProperty(@QueryParam("type") String type) {
-            return getResponse(type, stringField, integerField, intField);
+            return getResponse(type, stringField, integerField, intField, enumField);
         }
     }
 
@@ -72,31 +79,35 @@ class TestResources {
         private final String stringField;
         private final Integer integerField;
         private final int intField;
+        private final MyEnum enumField;
 
         public ConstructorInjectionPropertyLookupResource(@Property("stringField") String stringField,
                                                           @Property("integerField") Integer integerField,
-                                                          @Property("intField") int intField) {
+                                                          @Property("intField") int intField,
+                                                          @Property("enumField") MyEnum enumField) {
             this.stringField = stringField;
             this.integerField = integerField;
             this.intField = intField;
+            this.enumField = enumField;
         }
 
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public Response lookupProperty(@QueryParam("type") String type) {
-            return getResponse(type, stringField, integerField, intField);
+            return getResponse(type, stringField, integerField, intField, enumField);
         }
     }
 
-    private static Response getResponse(String type, String stringField, Integer integerField, int intField) {
+    private static Response getResponse(String type, String stringField, Integer integerField, int intField, MyEnum enumField) {
         final Object entity = switch (type) {
             case "stringField" -> stringField;
             case "integerField" -> integerField;
             case "intField" -> intField;
+            case "enumField" -> enumField;
             default -> throw new IllegalArgumentException(type + " is not a supported type");
         };
         return Response.ok()
-                .entity(entity)
+                .entity(entity.toString())
                 .header("javaType", entity.getClass().getTypeName())
                 .build();
     }
