@@ -28,14 +28,20 @@ class PropertyInjectionFeature implements Feature {
 
     private ResolutionFailureBehaviour resolutionFailureBehaviour= ResolutionFailureBehaviour.defaultBehaviour();
     private DeserialiserRegistry deserialiserRegistry = DeserialiserRegistry.defaultRegistry();
+    private DeserialiserRegistry additionalDeserialiserRegistry;
 
     public PropertyInjectionFeature withResolutionFailureBehaviour(ResolutionFailureBehaviour resolutionFailureBehaviour) {
         this.resolutionFailureBehaviour = resolutionFailureBehaviour;
         return this;
     }
 
-    public PropertyInjectionFeature withDeserialiserRegistry(DeserialiserRegistry deserialiserRegistry) {
+    public PropertyInjectionFeature withDefaultDeserialiserRegistry(DeserialiserRegistry deserialiserRegistry) {
         this.deserialiserRegistry = deserialiserRegistry;
+        return this;
+    }
+
+    public PropertyInjectionFeature withAdditionalDeserialiserRegistry(DeserialiserRegistry deserialiserRegistry) {
+        additionalDeserialiserRegistry = deserialiserRegistry;
         return this;
     }
 
@@ -49,7 +55,10 @@ class PropertyInjectionFeature implements Feature {
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
                         .in(Singleton.class);
-                bind(deserialiserRegistry).to(DeserialiserRegistry.class);
+                bind(deserialiserRegistry).to(DeserialiserRegistry.class).ranked(0);
+                if (additionalDeserialiserRegistry != null) {
+                    bind(additionalDeserialiserRegistry).to(DeserialiserRegistry.class).ranked(1);
+                }
             }
         });
 

@@ -111,6 +111,75 @@ class PropertyInjectionTest {
         assertThat(response.headers().firstValue("javaType")).hasValue(expectedJavaType.getTypeName());
     }
 
+    @Test
+    void whenACustomDeserialiserRegistryIsProvided_thenDeserialiseWithThatInsteadOfTheDefault() throws IOException, InterruptedException {
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                .register(FieldInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(PROPERTIES::get))
+                .register(new PropertyInjectionFeature()
+                        .withAdditionalDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")))));
+
+        final HttpResponse<String> response = newHttpClient().send(
+                HttpRequest.newBuilder()
+                        .GET()
+                        .uri(UriBuilder.fromUri(baseUri)
+                                .path("/fieldInjection")
+                                .queryParam("type", "stringField")
+                                .build())
+                        .build(),
+                BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("overriddenValue");
+        assertThat(response.headers().firstValue("javaType")).hasValue(String.class.getTypeName());
+    }
+
+    @Test
+    void whenACustomDeserialiserRegistryIsProvided_thenDeserialiseWithDefaultIfCustomOneDoesNotProvideDeserialiser() throws IOException, InterruptedException {
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                .register(FieldInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(PROPERTIES::get))
+                .register(new PropertyInjectionFeature()
+                        .withAdditionalDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")))));
+
+        final HttpResponse<String> response = newHttpClient().send(
+                HttpRequest.newBuilder()
+                        .GET()
+                        .uri(UriBuilder.fromUri(baseUri)
+                                .path("/fieldInjection")
+                                .queryParam("type", "integerField")
+                                .build())
+                        .build(),
+                BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("123");
+        assertThat(response.headers().firstValue("javaType")).hasValue(Integer.class.getTypeName());
+    }
+
+    @Test
+    void whenOverridingDefaultDeserialiserRegistry_thenDeserialiseWithDefaultIfCustomOneDoesNotProvideDeserialiser() throws IOException, InterruptedException {
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                .register(FieldInjectionPropertyLookupResource.class)
+                .register(new PropertyResolverFeature(PROPERTIES::get))
+                .register(new PropertyInjectionFeature()
+                        .withAdditionalDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")))));
+
+        final HttpResponse<String> response = newHttpClient().send(
+                HttpRequest.newBuilder()
+                        .GET()
+                        .uri(UriBuilder.fromUri(baseUri)
+                                .path("/fieldInjection")
+                                .queryParam("type", "integerField")
+                                .build())
+                        .build(),
+                BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("123");
+        assertThat(response.headers().firstValue("javaType")).hasValue(Integer.class.getTypeName());
+    }
+
     @FunctionalInterface
     interface TypeResolver {
         Object resolve(String s);
@@ -215,7 +284,7 @@ class PropertyInjectionTest {
                     .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(PROPERTIES::get))
                     .register(new PropertyInjectionFeature()
-                            .withDeserialiserRegistry(new DeserialiserRegistry(Map.of())))
+                            .withDefaultDeserialiserRegistry(new DeserialiserRegistry(Map.of())))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             newHttpClient().send(
@@ -253,7 +322,7 @@ class PropertyInjectionTest {
                     .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(s -> "propertyValue"))
                     .register(new PropertyInjectionFeature()
-                            .withDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> {
+                            .withDefaultDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> {
                                 throw new RuntimeException("Cannot deserialise a string.");
                             }))))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));

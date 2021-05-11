@@ -22,10 +22,12 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.ServiceHandle;
 
 import java.lang.reflect.*;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -36,7 +38,7 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     private Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
 
     @Inject
-    private DeserialiserRegistry deserialiserRegistry;
+    private IterableProvider<DeserialiserRegistry> deserialiserRegistries;
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
@@ -81,7 +83,7 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     }
 
     private Optional<Deserialiser<?>> getDeserialiser(Type requiredType, String typeName) {
-        return deserialiserRegistry.findForType(typeName)
+        return findDeserialiserInRegistry(typeName)
                 .or(() -> {
                     if (requiredType instanceof Class<?> typeAsClass && typeAsClass.isEnum()) {
                         return Optional.of(new EnumDeserialiser(typeAsClass));
@@ -89,6 +91,13 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
                         return Optional.empty();
                     }
                 });
+    }
+
+    private Optional<Deserialiser<?>> findDeserialiserInRegistry(String typeName) {
+        return StreamSupport.stream(deserialiserRegistries.spliterator(), false)
+                .map(dr -> dr.findForType(typeName))
+                .flatMap(Optional::stream)
+                .findFirst();
     }
 
     @Override
