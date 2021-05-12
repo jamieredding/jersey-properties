@@ -53,7 +53,8 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     private Property locateAnnotation(Injectee injectee) {
         final AnnotatedElement parent = injectee.getParent();
 
-        if (parent instanceof Constructor<?> constructor) {
+        if (parent instanceof Constructor<?>) {
+            final var constructor = (Constructor<?>) parent;
             final Parameter[] parameters = constructor.getParameters();
             final Parameter paramToInject = parameters[injectee.getPosition()];
             return paramToInject.getAnnotation(Property.class);
@@ -85,11 +86,13 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     private Optional<Deserialiser<?>> getDeserialiser(Type requiredType, String typeName) {
         return findDeserialiserInRegistry(typeName)
                 .or(() -> {
-                    if (requiredType instanceof Class<?> typeAsClass && typeAsClass.isEnum()) {
-                        return Optional.of(new EnumDeserialiser(typeAsClass));
-                    } else {
-                        return Optional.empty();
+                    if (requiredType instanceof Class<?>) {
+                        final var typeAsClass = (Class<?>) requiredType;
+                        if (typeAsClass.isEnum()) {
+                            return Optional.of(new EnumDeserialiser(typeAsClass));
+                        }
                     }
+                    return Optional.empty();
                 });
     }
 

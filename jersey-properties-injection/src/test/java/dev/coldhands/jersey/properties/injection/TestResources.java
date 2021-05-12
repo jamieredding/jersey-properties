@@ -114,13 +114,23 @@ class TestResources {
     }
 
     private static Response getResponse(String type, String stringField, Integer integerField, int intField, MyEnum enumField) {
-        final Object entity = switch (type) {
-            case "stringField" -> stringField;
-            case "integerField" -> integerField;
-            case "intField" -> intField;
-            case "enumField" -> enumField;
-            default -> throw new IllegalArgumentException(type + " is not a supported type");
-        };
+        final Object entity;
+        switch (type) {
+            case "stringField":
+                entity = stringField;
+                break;
+            case "integerField":
+                entity = integerField;
+                break;
+            case "intField":
+                entity = intField;
+                break;
+            case "enumField":
+                entity = enumField;
+                break;
+            default:
+                throw new IllegalArgumentException(type + " is not a supported type");
+        }
         return Response.ok()
                 .entity(entity.toString())
                 .header("javaType", entity.getClass().getTypeName())
@@ -139,8 +149,15 @@ class TestResources {
         }
     }
 
-    static record AssertingRequestEventListener(CountDownLatch countDownLatch,
-                                                ExceptionCapture exceptionCapture) implements ApplicationEventListener, RequestEventListener {
+    static class AssertingRequestEventListener implements ApplicationEventListener, RequestEventListener {
+        private final CountDownLatch countDownLatch;
+        private final ExceptionCapture exceptionCapture;
+
+        AssertingRequestEventListener(CountDownLatch countDownLatch, ExceptionCapture exceptionCapture) {
+            this.countDownLatch = countDownLatch;
+            this.exceptionCapture = exceptionCapture;
+        }
+
         @Override
         public void onEvent(ApplicationEvent applicationEvent) {
         }

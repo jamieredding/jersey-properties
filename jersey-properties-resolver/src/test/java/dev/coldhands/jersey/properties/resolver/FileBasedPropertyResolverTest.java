@@ -94,10 +94,7 @@ class FileBasedPropertyResolverTest {
 
         @Test
         void whenPropertyExistsInPropertyFile_thenReturnThatPropertyValue() throws IOException {
-            Files.writeString(propertyFile, """
-                    port=8080
-                    host=localhost
-                    """);
+            Files.writeString(propertyFile, "port=8080\nhost=localhost\n");
 
             final PropertyResolver underTest = new FileBasedPropertyResolver(propertyFile);
 
@@ -148,19 +145,14 @@ class FileBasedPropertyResolverTest {
 
         @Test
         void whenALineIsWhitespaceOnly_thenIgnoreThatLine() throws IOException {
-            Files.writeString(propertyFile, """
-                    port=8080
-                                        
-                    \t\s
-                    \r
-                    """);
+            Files.writeString(propertyFile, "port=8080\n\n\t \n\r\n");
 
             final PropertyResolver underTest = new FileBasedPropertyResolver(propertyFile);
 
             assertThat(underTest.getProperty("port")).isEqualTo("8080");
             assertThat(underTest.getProperty("\n")).isNull();
             assertThat(underTest.getProperty("\r\n")).isNull();
-            assertThat(underTest.getProperty("\t\s")).isNull();
+            assertThat(underTest.getProperty("\t ")).isNull();
         }
 
         @Test
@@ -192,11 +184,7 @@ class FileBasedPropertyResolverTest {
 
         @Test
         void whenAPropertyIsDuplicated_thenIncludeTheLatestOne() throws IOException {
-            Files.writeString(propertyFile, """
-                    port=8080
-                    port=9090
-                    port=10000
-                    """);
+            Files.writeString(propertyFile, "port=8080\nport=9090\nport=10000\n");
 
             final PropertyResolver underTest = new FileBasedPropertyResolver(propertyFile);
 
