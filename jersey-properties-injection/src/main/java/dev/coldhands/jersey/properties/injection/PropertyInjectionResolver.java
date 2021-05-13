@@ -17,37 +17,25 @@
 
 package dev.coldhands.jersey.properties.injection;
 
-import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.ServiceHandle;
 
 import java.lang.reflect.*;
-import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
     @Inject
-    private Provider<PropertyResolver> propertyResolverProvider;
-
-    @Inject
-    private Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
-
-    @Inject
-    private IterableProvider<DeserialiserRegistry> deserialiserRegistries;
+    private PropertyDeserialiser propertyDeserialiser;
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
         final Property propertyAnnotation = locateAnnotation(injectee);
+        final Type requiredType = injectee.getRequiredType();
         final String propertyName = propertyAnnotation.value();
 
-        final String propertyValue = lookupPropertyValue(propertyName);
-
-        return deserialiseValueToCorrectType(propertyName, propertyValue, injectee.getRequiredType());
+        return propertyDeserialiser.deserialise(propertyName, requiredType);
     }
 
     private Property locateAnnotation(Injectee injectee) {
@@ -63,46 +51,6 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         }
     }
 
-    private String lookupPropertyValue(String propertyName) {
-        return propertyResolverProvider.get()
-                .getOptionalProperty(propertyName)
-                .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
-    }
-
-    private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {
-        final String typeName = requiredType.getTypeName();
-
-        return getDeserialiser(requiredType, typeName)
-                .map(deserialiser -> {
-                    try {
-                        return deserialiser.deserialise(propertyValue);
-                    } catch (Exception e) {
-                        throw new DeserialiserException(propertyName, propertyValue, typeName, e);
-                    }
-                })
-                .orElseThrow(() -> new MissingDeserialiserException(typeName));
-    }
-
-    private Optional<Deserialiser<?>> getDeserialiser(Type requiredType, String typeName) {
-        return findDeserialiserInRegistry(typeName)
-                .or(() -> {
-                    if (requiredType instanceof Class<?>) {
-                        final var typeAsClass = (Class<?>) requiredType;
-                        if (typeAsClass.isEnum()) {
-                            return Optional.of(new EnumDeserialiser(typeAsClass));
-                        }
-                    }
-                    return Optional.empty();
-                });
-    }
-
-    private Optional<Deserialiser<?>> findDeserialiserInRegistry(String typeName) {
-        return StreamSupport.stream(deserialiserRegistries.spliterator(), false)
-                .map(dr -> dr.findForType(typeName))
-                .flatMap(Optional::stream)
-                .findFirst();
-    }
-
     @Override
     public boolean isConstructorParameterIndicator() {
         return true;
@@ -113,17 +61,4 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         return false;
     }
 
-    private static class EnumDeserialiser implements Deserialiser<Object> {
-        private final Class<?> typeAsClass;
-
-        public EnumDeserialiser(Class<?> typeAsClass) {
-            this.typeAsClass = typeAsClass;
-        }
-
-        @Override
-        public Object deserialise(String propertyValue) throws Exception {
-            final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
-            return method.invoke(typeAsClass, propertyValue);
-        }
-    }
 }

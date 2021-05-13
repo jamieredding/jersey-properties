@@ -51,6 +51,7 @@ class PropertyInjectionFeature implements Feature {
             @Override
             protected void configure() {
                 bind(resolutionFailureBehaviour).to(ResolutionFailureBehaviour.class);
+                bindAsContract(PropertyDeserialiser.class).in(Singleton.class);
                 bind(PropertyInjectionResolver.class)
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
