@@ -39,7 +39,7 @@ public class PropertyDeserialiser {
         this.deserialiserRegistries = deserialiserRegistries;
     }
 
-    Object deserialise(String propertyName, Type requiredType) {
+    public Object deserialise(String propertyName, Type requiredType) {
         final String propertyValue = lookupPropertyValue(propertyName);
 
         return deserialiseValueToCorrectType(propertyName, propertyValue, requiredType);
