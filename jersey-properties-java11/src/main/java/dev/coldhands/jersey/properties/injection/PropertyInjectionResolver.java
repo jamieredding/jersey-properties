@@ -38,7 +38,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         final Type requiredType = injectee.getRequiredType();
         final String propertyName = propertyAnnotation.value();
 
-        return propertyDeserialiser.deserialise(propertyName, requiredType);
+        // todo is this possible to not be safe given how hk2 works
+        final Class<?> potentiallyUnsafeCast = (Class<?>) requiredType;
+        return propertyDeserialiser.deserialise(propertyName, potentiallyUnsafeCast);
     }
 
     private Property locateAnnotation(Injectee injectee) {

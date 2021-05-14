@@ -129,7 +129,7 @@ class PropertyInjectionResolverTest {
                 .register(FieldInjectionPropertyLookupResource.class)
                 .register(new PropertyResolverFeature(PROPERTIES::get))
                 .register(new PropertyInjectionFeature()
-                        .withAdditionalDeserialiserRegistry(new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")))));
+                        .withAdditionalDeserialiserRegistry(DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build())));
 
         final HttpResponse<String> response = newHttpClient().send(
                 HttpRequest.newBuilder()
@@ -203,7 +203,7 @@ class PropertyInjectionResolverTest {
                     .register(StringPropertyLookupResource.class)
                     .register(new PropertyResolverFeature(PROPERTIES::get))
                     .register(new PropertyInjectionFeature()
-                            .withDefaultDeserialiserRegistry(new DeserialiserRegistry(Map.of())))
+                            .withDefaultDeserialiserRegistry(DeserialiserRegistry.builder().build()))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             newHttpClient().send(

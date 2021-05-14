@@ -22,57 +22,73 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.Map.entry;
-
 class DeserialiserRegistry {
 
-    private static final DeserialiserRegistry DEFAULT_REGISTRY = new DeserialiserRegistry(Map.ofEntries(
-            entry(String.class, s -> s),
-            entry(Integer.class, Integer::parseInt),
-            entry(int.class, Integer::parseInt),
-            entry(Long.class, Long::parseLong),
-            entry(long.class, Long::parseLong),
-            entry(Short.class, Short::parseShort),
-            entry(short.class, Short::parseShort),
-            entry(Float.class, Float::parseFloat),
-            entry(float.class, Float::parseFloat),
-            entry(Double.class, Double::parseDouble),
-            entry(double.class, Double::parseDouble),
-            entry(Boolean.class, Boolean::parseBoolean),
-            entry(boolean.class, Boolean::parseBoolean),
-            entry(Character.class, s -> s.charAt(0)),
-            entry(char.class, s -> s.charAt(0)),
-            entry(Byte.class, Byte::parseByte),
-            entry(byte.class, Byte::parseByte),
+    private static final DeserialiserRegistry DEFAULT_REGISTRY = DeserialiserRegistry.builder()
+            .put(String.class, s -> s)
+            .put(Integer.class, Integer::parseInt)
+            .put(int.class, Integer::parseInt)
+            .put(Long.class, Long::parseLong)
+            .put(long.class, Long::parseLong)
+            .put(Short.class, Short::parseShort)
+            .put(short.class, Short::parseShort)
+            .put(Float.class, Float::parseFloat)
+            .put(float.class, Float::parseFloat)
+            .put(Double.class, Double::parseDouble)
+            .put(double.class, Double::parseDouble)
+            .put(Boolean.class, Boolean::parseBoolean)
+            .put(boolean.class, Boolean::parseBoolean)
+            .put(Character.class, s -> s.charAt(0))
+            .put(char.class, s -> s.charAt(0))
+            .put(Byte.class, Byte::parseByte)
+            .put(byte.class, Byte::parseByte)
 
-            entry(Duration.class, Duration::parse),
-            entry(Instant.class, Instant::parse),
-            entry(LocalDate.class, LocalDate::parse),
-            entry(LocalDateTime.class, LocalDateTime::parse),
-            entry(LocalTime.class, LocalTime::parse),
-            entry(MonthDay.class, MonthDay::parse),
-            entry(OffsetDateTime.class, OffsetDateTime::parse),
-            entry(OffsetTime.class, OffsetTime::parse),
-            entry(Period.class, Period::parse),
-            entry(Year.class, Year::parse),
-            entry(YearMonth.class, YearMonth::parse),
-            entry(ZonedDateTime.class, ZonedDateTime::parse),
-            entry(ZoneId.class, ZoneId::of),
-            entry(ZoneOffset.class, ZoneOffset::of)
-    ));
+            .put(Duration.class, Duration::parse)
+            .put(Instant.class, Instant::parse)
+            .put(LocalDate.class, LocalDate::parse)
+            .put(LocalDateTime.class, LocalDateTime::parse)
+            .put(LocalTime.class, LocalTime::parse)
+            .put(MonthDay.class, MonthDay::parse)
+            .put(OffsetDateTime.class, OffsetDateTime::parse)
+            .put(OffsetTime.class, OffsetTime::parse)
+            .put(Period.class, Period::parse)
+            .put(Year.class, Year::parse)
+            .put(YearMonth.class, YearMonth::parse)
+            .put(ZonedDateTime.class, ZonedDateTime::parse)
+            .put(ZoneId.class, ZoneId::of)
+            .put(ZoneOffset.class, ZoneOffset::of)
+            .build();
 
     public static DeserialiserRegistry defaultRegistry() {
         return DEFAULT_REGISTRY;
     }
 
-    private final Map<String, Deserialiser<?>> registry = new HashMap<>();
+    private final Map<Class<?>, Deserialiser<?>> registry = new HashMap<>();
 
-    public DeserialiserRegistry(Map<Class<?>, Deserialiser<?>> registryConfiguration) {
-        registryConfiguration.forEach((clazz, deserialiser) ->
-                registry.put(clazz.getTypeName(), deserialiser));
+    private DeserialiserRegistry(Map<Class<?>, Deserialiser<?>> registryConfiguration) {
+        registryConfiguration.forEach(registry::put);
     }
 
-    public Optional<Deserialiser<?>> findForType(String typeName) {
-        return Optional.ofNullable(registry.get(typeName));
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <T> Optional<Deserialiser<T>> findForType(Class<T> typeName) {
+        return (Optional) Optional.ofNullable(registry.get(typeName));
+    }
+
+    public static class Builder {
+
+        private final Map<Class<?>, Deserialiser<?>> map = new HashMap<>();
+
+        <T> Builder put(Class<T> clazz, Deserialiser<T> deserialiser) {
+            map.put(clazz, deserialiser);
+            return this;
+        }
+
+        DeserialiserRegistry build() {
+            return new DeserialiserRegistry(map);
+        }
     }
 }

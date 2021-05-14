@@ -69,7 +69,7 @@ class PropertyDeserialiserTest {
     @Test
     void whenMultipleDeserialiserRegistriesAreConfiguredToSupportAType_thenDeserialiseWithFirstThatSupportsThatType() {
         final var underTest = new PropertyDeserialiser(() -> PROPERTIES::get, ResolutionFailureBehaviour::defaultBehaviour, List.of(
-                new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")),
+                DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
                 DeserialiserRegistry.defaultRegistry()));
 
         assertThat(underTest.deserialise("stringField", String.class))
@@ -79,7 +79,7 @@ class PropertyDeserialiserTest {
     @Test
     void whenMultipleDeserialiserRegistriesAreConfiguredButOnlySecondSupportsThatType_thenUseDeserialiserInSecondRegistry() {
         final var underTest = new PropertyDeserialiser(() -> PROPERTIES::get, ResolutionFailureBehaviour::defaultBehaviour, List.of(
-                new DeserialiserRegistry(Map.of(String.class, s -> "overriddenValue")),
+                DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
                 DeserialiserRegistry.defaultRegistry()));
 
         assertThat(underTest.deserialise("integerField", Integer.class))
@@ -121,7 +121,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void whenNoDeserialiserConfiguredForThatType_thenThrowExceptionToCauseResolutionToFail() {
-            final var underTest = new PropertyDeserialiser(() -> PROPERTIES::get, ResolutionFailureBehaviour::defaultBehaviour, List.of(new DeserialiserRegistry(Map.of())));
+            final var underTest = new PropertyDeserialiser(() -> PROPERTIES::get, ResolutionFailureBehaviour::defaultBehaviour, List.of(DeserialiserRegistry.builder().build()));
 
             assertThatThrownBy(() -> underTest.deserialise("anyProperty", String.class))
                     .isInstanceOf(MissingDeserialiserException.class)
@@ -135,9 +135,11 @@ class PropertyDeserialiserTest {
         @Test
         void whenExceptionThrownWhileDeserialising_thenThrowExceptionToCauseResolutionToFail() {
             final var underTest = new PropertyDeserialiser(() -> s -> "propertyValue", ResolutionFailureBehaviour::defaultBehaviour,
-                    List.of(new DeserialiserRegistry(Map.of(String.class, s -> {
-                        throw new RuntimeException("Cannot deserialise a string.");
-                    }))));
+                    List.of(DeserialiserRegistry.builder()
+                            .put(String.class, s -> {
+                                throw new RuntimeException("Cannot deserialise a string.");
+                            })
+                            .build()));
 
             assertThatThrownBy(() -> underTest.deserialise("propertyName", String.class))
                     .isInstanceOf(DeserialiserException.class)

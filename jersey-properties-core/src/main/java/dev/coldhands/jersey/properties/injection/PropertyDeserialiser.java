@@ -38,7 +38,7 @@ public class PropertyDeserialiser {
     }
 
     // todo add overloaded method that takes Property annotation
-    public Object deserialise(String propertyName, Type requiredType) {
+    public <T> T deserialise(String propertyName, Class<T> requiredType) {
         final String propertyValue = lookupPropertyValue(propertyName);
 
         return deserialiseValueToCorrectType(propertyName, propertyValue, requiredType);
@@ -50,51 +50,47 @@ public class PropertyDeserialiser {
                 .orElseGet(() -> resolutionFailureBehaviourSupplier.get().onMissingProperty(propertyName));
     }
 
-    private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {
-        final String typeName = requiredType.getTypeName();
-
-        return getDeserialiser(requiredType, typeName)
+    private <T> T deserialiseValueToCorrectType(String propertyName, String propertyValue, Class<T> requiredType) {
+        return getDeserialiser(requiredType)
                 .map(deserialiser -> {
                     try {
                         return deserialiser.deserialise(propertyValue);
                     } catch (Exception e) {
-                        throw new DeserialiserException(propertyName, propertyValue, typeName, e);
+                        throw new DeserialiserException(propertyName, propertyValue, requiredType, e);
                     }
                 })
-                .orElseThrow(() -> new MissingDeserialiserException(typeName));
+                .orElseThrow(() -> new MissingDeserialiserException(requiredType));
     }
 
-    private Optional<Deserialiser<?>> getDeserialiser(Type requiredType, String typeName) {
-        return findDeserialiserInRegistry(typeName)
+    private <T> Optional<Deserialiser<T>> getDeserialiser(Class<T> requiredType) {
+        return findDeserialiserInRegistry(requiredType)
                 .or(() -> {
-                    if (requiredType instanceof Class<?>) {
-                        final var typeAsClass = (Class<?>) requiredType;
-                        if (typeAsClass.isEnum()) {
-                            return Optional.of(new EnumDeserialiser(typeAsClass));
-                        }
+                    if (requiredType.isEnum()) {
+                        return Optional.of(new EnumDeserialiser<>(requiredType));
                     }
                     return Optional.empty();
                 });
     }
 
-    private Optional<Deserialiser<?>> findDeserialiserInRegistry(String typeName) {
+    private <T> Optional<Deserialiser<T>> findDeserialiserInRegistry(Class<T> typeName) {
         return StreamSupport.stream(deserialiserRegistries.spliterator(), false)
                 .map(dr -> dr.findForType(typeName))
                 .flatMap(Optional::stream)
                 .findFirst();
     }
 
-    private static class EnumDeserialiser implements Deserialiser<Object> {
-        private final Class<?> typeAsClass;
+    private static class EnumDeserialiser<T> implements Deserialiser<T> {
+        private final Class<T> typeAsClass;
 
-        public EnumDeserialiser(Class<?> typeAsClass) {
+        public EnumDeserialiser(Class<T> typeAsClass) {
             this.typeAsClass = typeAsClass;
         }
 
         @Override
-        public Object deserialise(String propertyValue) throws Exception {
+        @SuppressWarnings("unchecked")
+        public T deserialise(String propertyValue) throws Exception {
             final Method method = typeAsClass.getDeclaredMethod("valueOf", String.class);
-            return method.invoke(typeAsClass, propertyValue);
+            return (T) method.invoke(typeAsClass, propertyValue);
         }
     }
 }

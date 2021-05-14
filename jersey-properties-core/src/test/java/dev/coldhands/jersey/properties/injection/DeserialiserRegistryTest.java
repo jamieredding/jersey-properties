@@ -37,28 +37,31 @@ class DeserialiserRegistryTest {
         final Deserialiser<String> stringDeserialiser = s -> s;
         final Deserialiser<Integer> integerDeserialiser = Integer::parseInt;
 
-        final var underTest = new DeserialiserRegistry(Map.of(
-                String.class, stringDeserialiser,
-                Integer.class, integerDeserialiser));
+        final var underTest = DeserialiserRegistry.builder()
+                .put(String.class, stringDeserialiser)
+                .put(Integer.class, integerDeserialiser)
+                .build();
 
-        assertThat(underTest.findForType(String.class.getTypeName()))
+        assertThat(underTest.findForType(String.class))
                 .hasValue(stringDeserialiser);
-        assertThat(underTest.findForType(Integer.class.getTypeName()))
+        assertThat(underTest.findForType(Integer.class))
                 .hasValue(integerDeserialiser);
     }
 
     @Test
     void whenThereIsNoDeserialiserForThatType_thenReturnOptionalEmpty() {
-        final var underTest = new DeserialiserRegistry(Map.of(String.class, s -> s));
+        final var underTest = DeserialiserRegistry.builder()
+                .put(String.class, s -> s)
+                .build();
 
-        assertThat(underTest.findForType(Object.class.getTypeName()))
+        assertThat(underTest.findForType(Object.class))
                 .isEmpty();
     }
 
     @ParameterizedTest
     @MethodSource("expectedTypeAndDeserialisedValue")
-    void defaultDeserialiserRegistrySupports(Class<?> expectedClass, String serialisedValue, Object expectedDeserialisedValue) throws Exception {
-        final Optional<Deserialiser<?>> optionalDeserialiser = DeserialiserRegistry.defaultRegistry().findForType(expectedClass.getTypeName());
+    <T> void defaultDeserialiserRegistrySupports(Class<T> expectedClass, String serialisedValue, T expectedDeserialisedValue) throws Exception {
+        final Optional<Deserialiser<T>> optionalDeserialiser = DeserialiserRegistry.defaultRegistry().findForType(expectedClass);
 
         assertThat(optionalDeserialiser).isPresent();
         assertThat(optionalDeserialiser.get().deserialise(serialisedValue))
