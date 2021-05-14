@@ -22,7 +22,10 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 
-import java.lang.reflect.*;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 

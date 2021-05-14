@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static dev.coldhands.jersey.properties.injection.TestResources.MyEnum;
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,6 +41,8 @@ class PropertyDeserialiserTest {
             entry("intField", "456"),
             entry("enumField", MyEnum.VALUE.name())
     );
+
+    private enum MyEnum {VALUE}
 
     @FunctionalInterface
     interface TypeResolver {

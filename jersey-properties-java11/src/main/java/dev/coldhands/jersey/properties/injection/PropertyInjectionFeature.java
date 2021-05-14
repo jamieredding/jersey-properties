@@ -26,7 +26,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 class PropertyInjectionFeature implements Feature {
 
-    private ResolutionFailureBehaviour resolutionFailureBehaviour= ResolutionFailureBehaviour.defaultBehaviour();
+    private ResolutionFailureBehaviour resolutionFailureBehaviour = ResolutionFailureBehaviour.defaultBehaviour();
     private DeserialiserRegistry deserialiserRegistry = DeserialiserRegistry.defaultRegistry();
     private DeserialiserRegistry additionalDeserialiserRegistry;
 
@@ -50,15 +50,22 @@ class PropertyInjectionFeature implements Feature {
         context.register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(resolutionFailureBehaviour).to(ResolutionFailureBehaviour.class);
-                bindAsContract(PropertyDeserialiser.class).in(Singleton.class);
+                bind(resolutionFailureBehaviour)
+                        .to(ResolutionFailureBehaviour.class);
+                bindFactory(PropertyDeserialiserFactory.class)
+                        .to(PropertyDeserialiser.class)
+                        .in(Singleton.class);
                 bind(PropertyInjectionResolver.class)
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
                         .in(Singleton.class);
-                bind(deserialiserRegistry).to(DeserialiserRegistry.class).ranked(0);
+                bind(deserialiserRegistry)
+                        .to(DeserialiserRegistry.class)
+                        .ranked(0);
                 if (additionalDeserialiserRegistry != null) {
-                    bind(additionalDeserialiserRegistry).to(DeserialiserRegistry.class).ranked(1);
+                    bind(additionalDeserialiserRegistry)
+                            .to(DeserialiserRegistry.class)
+                            .ranked(1);
                 }
             }
         });

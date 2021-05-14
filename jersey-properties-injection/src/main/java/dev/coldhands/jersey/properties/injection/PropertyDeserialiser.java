@@ -18,27 +18,26 @@
 package dev.coldhands.jersey.properties.injection;
 
 import dev.coldhands.jersey.properties.resolver.PropertyResolver;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
 public class PropertyDeserialiser {
 
-    private final Provider<PropertyResolver> propertyResolverProvider;
-    private final Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
+    private final Supplier<PropertyResolver> propertyResolverSupplier;
+    private final Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier;
     private final Iterable<DeserialiserRegistry> deserialiserRegistries;
 
-    @Inject
-    public PropertyDeserialiser(Provider<PropertyResolver> propertyResolverProvider, Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider, Iterable<DeserialiserRegistry> deserialiserRegistries) {
-        this.propertyResolverProvider = propertyResolverProvider;
-        this.resolutionFailureBehaviourProvider = resolutionFailureBehaviourProvider;
+    public PropertyDeserialiser(Supplier<PropertyResolver> propertyResolverSupplier, Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier, Iterable<DeserialiserRegistry> deserialiserRegistries) {
+        this.propertyResolverSupplier = propertyResolverSupplier;
+        this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
         this.deserialiserRegistries = deserialiserRegistries;
     }
 
+    // todo add overloaded method that takes Property annotation
     public Object deserialise(String propertyName, Type requiredType) {
         final String propertyValue = lookupPropertyValue(propertyName);
 
@@ -46,9 +45,9 @@ public class PropertyDeserialiser {
     }
 
     private String lookupPropertyValue(String propertyName) {
-        return propertyResolverProvider.get()
+        return propertyResolverSupplier.get()
                 .getOptionalProperty(propertyName)
-                .orElseGet(() -> resolutionFailureBehaviourProvider.get().onMissingProperty(propertyName));
+                .orElseGet(() -> resolutionFailureBehaviourSupplier.get().onMissingProperty(propertyName));
     }
 
     private Object deserialiseValueToCorrectType(String propertyName, String propertyValue, Type requiredType) {

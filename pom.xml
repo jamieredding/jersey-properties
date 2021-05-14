@@ -29,6 +29,7 @@
         <module>jersey-properties-resolver</module>
         <module>jersey-properties-injection</module>
         <module>jersey-properties-test-support</module>
+        <module>jersey-properties-java11</module>
     </modules>
 
     <properties>
@@ -55,6 +56,11 @@
             <dependency>
                 <groupId>dev.coldhands</groupId>
                 <artifactId>jersey-properties-resolver</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.coldhands</groupId>
+                <artifactId>jersey-properties-injection</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
