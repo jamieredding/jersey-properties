@@ -47,21 +47,6 @@ class TestResources {
         }
     }
 
-    @Path("/invalidEnum")
-    public static class InvalidEnumValueResource {
-
-        @Property("invalidEnum")
-        private MyEnum value;
-
-        @GET
-        @Produces(MediaType.TEXT_PLAIN)
-        public Response get() {
-            return Response.ok()
-                    .entity(value.toString())
-                    .build();
-        }
-    }
-
     public enum MyEnum {
         VALUE
     }
