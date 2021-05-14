@@ -26,7 +26,7 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>jersey-properties-injection</module>
+        <module>jersey-properties-core</module>
         <module>jersey-properties-java11</module>
     </modules>
 
@@ -48,7 +48,7 @@
         <dependencies>
             <dependency>
                 <groupId>dev.coldhands</groupId>
-                <artifactId>jersey-properties-injection</artifactId>
+                <artifactId>jersey-properties-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

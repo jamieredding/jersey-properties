@@ -31,7 +31,7 @@
     <dependencies>
         <dependency>
             <groupId>dev.coldhands</groupId>
-            <artifactId>jersey-properties-injection</artifactId>
+            <artifactId>jersey-properties-core</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
