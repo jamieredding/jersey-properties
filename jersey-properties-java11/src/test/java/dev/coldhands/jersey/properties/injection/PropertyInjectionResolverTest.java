@@ -18,7 +18,7 @@
 package dev.coldhands.jersey.properties.injection;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory;
+import dev.coldhands.jersey.properties.TestHttpServerFactory;
 import dev.coldhands.jersey.properties.resolver.PropertyResolverFeature;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
-import static dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory.anyOpenPort;
+import static dev.coldhands.jersey.properties.TestHttpServerFactory.anyOpenPort;
 import static dev.coldhands.jersey.properties.injection.TestResources.*;
 import static java.net.http.HttpClient.newHttpClient;
 import static java.util.Map.entry;

@@ -18,7 +18,7 @@
 package dev.coldhands.jersey.properties.resolver;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory;
+import dev.coldhands.jersey.properties.TestHttpServerFactory;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -37,7 +37,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 
-import static dev.coldhands.jersey.proerties.test.support.TestHttpServerFactory.anyOpenPort;
+import static dev.coldhands.jersey.properties.TestHttpServerFactory.anyOpenPort;
 import static java.net.http.HttpClient.newHttpClient;
 import static org.assertj.core.api.Assertions.assertThat;
 

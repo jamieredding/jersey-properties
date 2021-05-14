@@ -30,22 +30,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>dev.coldhands</groupId>
-            <artifactId>jersey-properties-resolver</artifactId>
-            <!-- todo: this should be removed once resolver is moved here -->
-            <exclusions>
-                <exclusion>
-                    <groupId>jakarta.ws.rs</groupId>
-                    <artifactId>jakarta.ws.rs-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.glassfish.hk2</groupId>
-                    <artifactId>hk2-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
         </dependency>
