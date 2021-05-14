@@ -17,7 +17,7 @@
 
 package dev.coldhands.jersey.properties.injection;
 
-class MissingDeserialiserException extends RuntimeException {
+public class MissingDeserialiserException extends RuntimeException {
     public MissingDeserialiserException(Class<?> injecteeClass) {
         super("No deserialiser configured for type: " + injecteeClass.getTypeName());
     }

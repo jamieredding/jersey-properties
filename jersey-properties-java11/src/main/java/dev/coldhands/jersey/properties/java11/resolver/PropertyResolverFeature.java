@@ -15,30 +15,28 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.injection;
+package dev.coldhands.jersey.properties.java11.resolver;
 
 import dev.coldhands.jersey.properties.resolver.PropertyResolver;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.FeatureContext;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-class PropertyDeserialiserFactory implements Factory<PropertyDeserialiser> {
+public class PropertyResolverFeature implements Feature {
+    private final PropertyResolver propertyResolver;
 
-    @Inject
-    private Provider<PropertyResolver> propertyResolverProvider;
-    @Inject
-    private Provider<ResolutionFailureBehaviour> resolutionFailureBehaviourProvider;
-    @Inject
-    private IterableProvider<DeserialiserRegistry> deserialiserRegistries;
-
-    @Override
-    public PropertyDeserialiser provide() {
-        return new PropertyDeserialiser(propertyResolverProvider::get, resolutionFailureBehaviourProvider::get, deserialiserRegistries);
+    public PropertyResolverFeature(PropertyResolver propertyResolver) {
+        this.propertyResolver = propertyResolver;
     }
 
     @Override
-    public void dispose(PropertyDeserialiser instance) {
-
+    public boolean configure(FeatureContext featureContext) {
+        featureContext.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(PropertyResolverFeature.this.propertyResolver).to(PropertyResolver.class);
+            }
+        });
+        return true;
     }
 }

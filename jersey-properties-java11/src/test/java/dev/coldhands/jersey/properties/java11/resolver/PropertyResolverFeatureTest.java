@@ -15,10 +15,11 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.java11.resolver;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.properties.TestHttpServerFactory;
+import dev.coldhands.jersey.properties.java11.TestHttpServerFactory;
+import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -37,7 +38,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 
-import static dev.coldhands.jersey.properties.TestHttpServerFactory.anyOpenPort;
+import static dev.coldhands.jersey.properties.java11.TestHttpServerFactory.anyOpenPort;
 import static java.net.http.HttpClient.newHttpClient;
 import static org.assertj.core.api.Assertions.assertThat;
 

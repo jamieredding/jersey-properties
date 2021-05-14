@@ -18,7 +18,7 @@
 package dev.coldhands.jersey.properties.injection;
 
 @FunctionalInterface
-interface Deserialiser<T> {
+public interface Deserialiser<T> {
 
     T deserialise(String value) throws Exception;
 }

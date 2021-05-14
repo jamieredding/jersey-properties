@@ -17,7 +17,7 @@
 
 package dev.coldhands.jersey.properties.injection;
 
-interface ResolutionFailureBehaviour {
+public interface ResolutionFailureBehaviour {
 
     static ResolutionFailureBehaviour defaultBehaviour() {
         return propertyName -> propertyName;

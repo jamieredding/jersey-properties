@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-class DeserialiserRegistry {
+public class DeserialiserRegistry {
 
     private static final DeserialiserRegistry DEFAULT_REGISTRY = DeserialiserRegistry.builder()
             .put(String.class, s -> s)
@@ -82,12 +82,12 @@ class DeserialiserRegistry {
 
         private final Map<Class<?>, Deserialiser<?>> map = new HashMap<>();
 
-        <T> Builder put(Class<T> clazz, Deserialiser<T> deserialiser) {
+        public <T> Builder put(Class<T> clazz, Deserialiser<T> deserialiser) {
             map.put(clazz, deserialiser);
             return this;
         }
 
-        DeserialiserRegistry build() {
+        public DeserialiserRegistry build() {
             return new DeserialiserRegistry(map);
         }
     }
