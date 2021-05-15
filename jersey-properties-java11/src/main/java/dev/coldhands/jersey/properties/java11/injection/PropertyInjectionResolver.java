@@ -24,10 +24,7 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 
 class PropertyInjectionResolver implements InjectionResolver<Property> {
 
@@ -37,12 +34,9 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> serviceHandle) {
         final Property propertyAnnotation = locateAnnotation(injectee);
-        final Type requiredType = injectee.getRequiredType();
         final String propertyName = propertyAnnotation.value();
 
-        // todo is this possible to not be safe given how hk2 works
-        final Class<?> potentiallyUnsafeCast = (Class<?>) requiredType;
-        return propertyDeserialiser.deserialise(propertyName, potentiallyUnsafeCast);
+        return propertyDeserialiser.deserialise(propertyName, getInjectionSiteClass(injectee, propertyName));
     }
 
     private Property locateAnnotation(Injectee injectee) {
@@ -56,6 +50,21 @@ class PropertyInjectionResolver implements InjectionResolver<Property> {
         } else {
             return parent.getAnnotation(Property.class);
         }
+    }
+
+    private Class<?> getInjectionSiteClass(Injectee injectee, String propertyName) {
+        final Type requiredType = injectee.getRequiredType();
+
+        if (requiredType instanceof Class<?>) {
+            return (Class<?>) requiredType;
+        } else if (requiredType instanceof ParameterizedType) {
+            throw new UnsupportedInjectionTargetException(requiredType, propertyName, ParameterizedType.class);
+        } else if (requiredType instanceof GenericArrayType) {
+            throw new UnsupportedInjectionTargetException(requiredType,propertyName, GenericArrayType.class);
+        } else if (requiredType instanceof TypeVariable) {
+            throw new UnsupportedInjectionTargetException(requiredType,propertyName, TypeVariable.class);
+        }
+        throw new UnsupportedInjectionTargetException(requiredType, propertyName, requiredType.getClass());
     }
 
     @Override

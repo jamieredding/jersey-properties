@@ -29,6 +29,7 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
 class TestResources {
@@ -159,6 +160,50 @@ class TestResources {
                 exceptionCapture.capture(requestEvent.getException());
                 countDownLatch.countDown();
             }
+        }
+    }
+
+    @Path("/parameterizedType")
+    static class ParameterizedTypeResource {
+        @Property("abc")
+        private Collection<String> abc;
+
+        @GET
+        public Response done() {
+            return Response.noContent().build();
+        }
+    }
+
+    @Path("/genericArrayType")
+    static class GenericArrayTypeInjection {
+        @Property("abc")
+        private Collection<String>[] abc;
+
+        @GET
+        public Response done() {
+            return Response.noContent().build();
+        }
+    }
+
+    @Path("/genericArrayType2")
+    static class GenericArrayTypeInjection2<T> {
+        @Property("abc")
+        private T[] abc;
+
+        @GET
+        public Response done() {
+            return Response.noContent().build();
+        }
+    }
+
+    @Path("/typeVariable")
+    static class TypeVariableInjection<T> {
+        @Property("abc")
+        private T abc;
+
+        @GET
+        public Response done() {
+            return Response.noContent().build();
         }
     }
 }
