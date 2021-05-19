@@ -181,8 +181,7 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(StringPropertyLookupResource.class)
-                    .register(new PropertyInjectionFeature(PropertyDeserialiser.builder()
-                            .withPropertyResolver(PROPERTIES::get)
+                    .register(new PropertyInjectionFeature(PropertyDeserialiser.builder(PROPERTIES::get)
                             .withDeserialiserRegistries(List.of(aDeserialiserRegistryThatHasNoDeserialisersConfigured()))
                             .build()))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));

@@ -35,9 +35,7 @@ public class PropertyInjectionFeature implements Feature {
         if (propertyResolver == null) {
             throw new IllegalArgumentException("PropertyResolver must not be null");
         }
-        this.propertyDeserialiser = PropertyDeserialiser.builder()
-                .withPropertyResolver(() -> propertyResolver)
-                .build();
+        this.propertyDeserialiser = PropertyDeserialiser.builder(propertyResolver).build();
     }
 
     public PropertyInjectionFeature(PropertyDeserialiser propertyDeserialiser) {

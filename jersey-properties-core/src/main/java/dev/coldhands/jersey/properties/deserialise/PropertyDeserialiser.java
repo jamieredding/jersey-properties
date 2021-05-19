@@ -94,41 +94,56 @@ public class PropertyDeserialiser {
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(PropertyResolver propertyResolver) {
+        checkNotNull(propertyResolver, "PropertyResolver");
+        return new Builder(propertyResolver);
+    }
+
+    public static Builder builder(Supplier<PropertyResolver> propertyResolverSupplier) {
+        checkNotNull(propertyResolverSupplier, "PropertyResolver");
+        return new Builder(propertyResolverSupplier);
     }
 
     public static class Builder {
 
-        private Supplier<PropertyResolver> propertyResolverSupplier;
+        private final Supplier<PropertyResolver> propertyResolverSupplier;
+
         private Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier = ResolutionFailureBehaviour::defaultBehaviour;
         private Iterable<DeserialiserRegistry> deserialiserRegistries = List.of(DeserialiserRegistry.defaultRegistry());
 
-        public Builder withPropertyResolver(PropertyResolver propertyResolver) {
-            return withPropertyResolver(() -> propertyResolver);
+        private Builder(PropertyResolver propertyResolver) {
+            this(() -> propertyResolver);
         }
 
-        public Builder withPropertyResolver(Supplier<PropertyResolver> propertyResolverSupplier) {
+        private Builder(Supplier<PropertyResolver> propertyResolverSupplier) {
             this.propertyResolverSupplier = propertyResolverSupplier;
-            return this;
         }
 
         public Builder withResolutionFailureBehaviour(ResolutionFailureBehaviour resolutionFailureBehaviour) {
+            checkNotNull(resolutionFailureBehaviour, "ResolutionFailureBehaviour");
             return withResolutionFailureBehaviour(() -> resolutionFailureBehaviour);
         }
 
         public Builder withResolutionFailureBehaviour(Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier) {
+            checkNotNull(resolutionFailureBehaviourSupplier, "ResolutionFailureBehaviour");
             this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
             return this;
         }
 
         public Builder withDeserialiserRegistries(Iterable<DeserialiserRegistry> deserialiserRegistries) {
+            checkNotNull(deserialiserRegistries, "DeserialiserRegistries");
             this.deserialiserRegistries = deserialiserRegistries;
             return this;
         }
 
         public PropertyDeserialiser build() {
             return new PropertyDeserialiser(propertyResolverSupplier, resolutionFailureBehaviourSupplier, deserialiserRegistries);
+        }
+    }
+
+    private static <T> void checkNotNull(T object, String type) {
+        if (object == null) {
+            throw new IllegalArgumentException(type + " must not be null");
         }
     }
 

@@ -17,6 +17,7 @@
 
 package dev.coldhands.jersey.properties.deserialise;
 
+import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,6 +27,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Map.entry;
@@ -60,8 +62,7 @@ class PropertyDeserialiserTest {
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
     void whenPropertyExists_thenDeserialiseForExpectedType(String propertyName, TypeResolver typeResolver, Class<?> expectedJavaType) {
-        final var underTest = PropertyDeserialiser.builder()
-                .withPropertyResolver(PROPERTIES::get)
+        final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .build();
 
         assertThat(underTest.deserialise(propertyName, expectedJavaType))
@@ -70,8 +71,7 @@ class PropertyDeserialiserTest {
 
     @Test
     void whenMultipleDeserialiserRegistriesAreConfiguredToSupportAType_thenDeserialiseWithFirstThatSupportsThatType() {
-        final var underTest = PropertyDeserialiser.builder()
-                .withPropertyResolver(PROPERTIES::get)
+        final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .withDeserialiserRegistries(List.of(
                         DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
                         DeserialiserRegistry.defaultRegistry()))
@@ -83,8 +83,7 @@ class PropertyDeserialiserTest {
 
     @Test
     void whenMultipleDeserialiserRegistriesAreConfiguredButOnlySecondSupportsThatType_thenUseDeserialiserInSecondRegistry() {
-        final var underTest = PropertyDeserialiser.builder()
-                .withPropertyResolver(PROPERTIES::get)
+        final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .withDeserialiserRegistries(List.of(
                         DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
                         DeserialiserRegistry.defaultRegistry()))
@@ -95,13 +94,58 @@ class PropertyDeserialiserTest {
     }
 
     @Nested
+    class BuilderFieldsAreNull {
+
+        @Test
+        void whenPropertyResolverIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder((PropertyResolver) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("PropertyResolver must not be null");
+        }
+
+        @Test
+        void whenPropertyResolverSupplierIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder((Supplier<PropertyResolver>) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("PropertyResolver must not be null");
+        }
+
+        @Test
+        void whenResolutionFailureBehaviourIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withResolutionFailureBehaviour((ResolutionFailureBehaviour) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("ResolutionFailureBehaviour must not be null");
+        }
+
+        @Test
+        void whenResolutionFailureBehaviourSupplierIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withResolutionFailureBehaviour((Supplier<ResolutionFailureBehaviour>) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("ResolutionFailureBehaviour must not be null");
+        }
+
+        @Test
+        void whenDeserialiserRegistriesAreNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withDeserialiserRegistries(null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("DeserialiserRegistries must not be null");
+        }
+    }
+
+    @Nested
     class PropertyMissing {
 
         @Test
         void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() {
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(propertyName -> null)
-                    .build();
+            final var underTest = PropertyDeserialiser.builder(propertyName -> null).build();
 
             assertThat(underTest.deserialise("anyProperty", String.class))
                     .isEqualTo("anyProperty");
@@ -109,8 +153,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void throwExceptionOnMissingPropertyBehaviour_whenPropertyIsMissing_thenThrowExceptionToCauseResolutionToFail() {
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(propertyName -> null)
+            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
                     .withResolutionFailureBehaviour(ResolutionFailureBehaviour.throwException())
                     .withDeserialiserRegistries(List.of())
                     .build();
@@ -122,8 +165,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() {
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(propertyName -> null)
+            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
                     .withResolutionFailureBehaviour(propertyName -> propertyName + "-value")
                     .build();
 
@@ -138,8 +180,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void whenNoDeserialiserConfiguredForThatType_thenThrowExceptionToCauseResolutionToFail() {
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(PROPERTIES::get)
+            final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                     .withDeserialiserRegistries(List.of(DeserialiserRegistry.builder().build()))
                     .build();
 
@@ -154,8 +195,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void whenExceptionThrownWhileDeserialising_thenThrowExceptionToCauseResolutionToFail() {
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(s -> "propertyValue")
+            final var underTest = PropertyDeserialiser.builder(s -> "propertyValue")
                     .withDeserialiserRegistries(List.of(DeserialiserRegistry.builder()
                             .put(String.class, s -> {
                                 throw new RuntimeException("Cannot deserialise a string.");
@@ -173,9 +213,7 @@ class PropertyDeserialiserTest {
         @Test
         void whenExceptionThrownWhileAutomaticallyDeserialisingEnum_thenThrowExceptionToCauseResolutionToFail() {
             final var expectedPropertyValue = "Value not in " + MyEnum.class;
-            final var underTest = PropertyDeserialiser.builder()
-                    .withPropertyResolver(s -> expectedPropertyValue)
-                    .build();
+            final var underTest = PropertyDeserialiser.builder(s -> expectedPropertyValue).build();
 
             assertThatThrownBy(() -> underTest.deserialise("invalidEnum", MyEnum.class))
                     .isInstanceOf(DeserialiserException.class)
