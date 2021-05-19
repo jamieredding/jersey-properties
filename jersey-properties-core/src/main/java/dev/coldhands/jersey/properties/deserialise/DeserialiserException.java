@@ -15,28 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.resolver;
+package dev.coldhands.jersey.properties.deserialise;
 
-import dev.coldhands.jersey.properties.resolver.PropertyResolver;
-import jakarta.ws.rs.core.Feature;
-import jakarta.ws.rs.core.FeatureContext;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
-public class PropertyResolverFeature implements Feature {
-    private final PropertyResolver propertyResolver;
-
-    public PropertyResolverFeature(PropertyResolver propertyResolver) {
-        this.propertyResolver = propertyResolver;
-    }
-
-    @Override
-    public boolean configure(FeatureContext featureContext) {
-        featureContext.register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(PropertyResolverFeature.this.propertyResolver).to(PropertyResolver.class);
-            }
-        });
-        return true;
+class DeserialiserException extends RuntimeException {
+    public DeserialiserException(String propertyName, String propertyValue, Class<?> injecteeClass, Exception cause) {
+        super(String.format("Exception thrown while deserialising property: %s=%s as type: %s", propertyName, propertyValue, injecteeClass.getTypeName()), cause);
     }
 }

@@ -15,15 +15,17 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.injection;
+package dev.coldhands.jersey.properties.deserialise;
 
-import java.lang.reflect.Type;
 
-class UnsupportedInjectionTargetException extends RuntimeException {
-    public UnsupportedInjectionTargetException(Type injectionSiteType, String propertyName, Class<?> typeKind) {
-        super(String.format("Injection site %s for property %s is not a supported target type: %s",
-                injectionSiteType.getTypeName(),
-                propertyName,
-                typeKind.getSimpleName()));
-    }
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
+public @interface Property {
+
+    String value();
 }

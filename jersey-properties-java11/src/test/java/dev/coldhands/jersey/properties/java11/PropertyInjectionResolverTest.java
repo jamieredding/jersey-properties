@@ -15,13 +15,11 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.injection;
+package dev.coldhands.jersey.properties.java11;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.properties.injection.DeserialiserRegistry;
-import dev.coldhands.jersey.properties.injection.MissingDeserialiserException;
-import dev.coldhands.jersey.properties.java11.TestHttpServerFactory;
-import dev.coldhands.jersey.properties.java11.resolver.PropertyResolverFeature;
+import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
+import dev.coldhands.jersey.properties.deserialise.MissingDeserialiserException;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +39,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
 import static dev.coldhands.jersey.properties.java11.TestHttpServerFactory.anyOpenPort;
-import static dev.coldhands.jersey.properties.java11.injection.TestResources.*;
+import static dev.coldhands.jersey.properties.java11.TestResources.*;
 import static jakarta.ws.rs.core.UriBuilder.fromUri;
 import static java.net.http.HttpClient.newHttpClient;
 import static java.util.Map.entry;

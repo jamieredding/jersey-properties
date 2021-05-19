@@ -15,10 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.injection;
+package dev.coldhands.jersey.properties.deserialise;
 
-class DeserialiserException extends RuntimeException {
-    public DeserialiserException(String propertyName, String propertyValue, Class<?> injecteeClass, Exception cause) {
-        super(String.format("Exception thrown while deserialising property: %s=%s as type: %s", propertyName, propertyValue, injecteeClass.getTypeName()), cause);
+public class MissingDeserialiserException extends RuntimeException {
+    public MissingDeserialiserException(Class<?> injecteeClass) {
+        super("No deserialiser configured for type: " + injecteeClass.getTypeName());
     }
 }

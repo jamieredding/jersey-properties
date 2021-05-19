@@ -15,12 +15,12 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.injection;
+package dev.coldhands.jersey.properties.java11;
 
-import dev.coldhands.jersey.properties.injection.DeserialiserRegistry;
-import dev.coldhands.jersey.properties.injection.Property;
-import dev.coldhands.jersey.properties.injection.PropertyDeserialiser;
-import dev.coldhands.jersey.properties.injection.ResolutionFailureBehaviour;
+import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
+import dev.coldhands.jersey.properties.deserialise.Property;
+import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.deserialise.ResolutionFailureBehaviour;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;

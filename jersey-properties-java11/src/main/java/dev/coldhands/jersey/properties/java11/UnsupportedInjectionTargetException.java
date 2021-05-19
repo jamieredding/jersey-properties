@@ -15,19 +15,15 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.injection;
+package dev.coldhands.jersey.properties.java11;
 
-public interface ResolutionFailureBehaviour {
+import java.lang.reflect.Type;
 
-    static ResolutionFailureBehaviour defaultBehaviour() {
-        return propertyName -> propertyName;
+class UnsupportedInjectionTargetException extends RuntimeException {
+    public UnsupportedInjectionTargetException(Type injectionSiteType, String propertyName, Class<?> typeKind) {
+        super(String.format("Injection site %s for property %s is not a supported target type: %s",
+                injectionSiteType.getTypeName(),
+                propertyName,
+                typeKind.getSimpleName()));
     }
-
-    static ResolutionFailureBehaviour throwException() {
-        return propertyName -> {
-            throw new MissingPropertyException(propertyName);
-        };
-    }
-
-    String onMissingProperty(String propertyName);
 }

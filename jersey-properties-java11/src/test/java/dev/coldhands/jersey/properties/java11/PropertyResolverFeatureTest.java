@@ -15,10 +15,9 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.resolver;
+package dev.coldhands.jersey.properties.java11;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.properties.java11.TestHttpServerFactory;
 import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

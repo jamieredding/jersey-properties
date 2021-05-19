@@ -15,10 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.injection;
+package dev.coldhands.jersey.properties.java11;
 
-import dev.coldhands.jersey.properties.injection.Property;
-import dev.coldhands.jersey.properties.injection.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.deserialise.Property;
+import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;

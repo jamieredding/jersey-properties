@@ -15,9 +15,9 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11.injection;
+package dev.coldhands.jersey.properties.java11;
 
-import dev.coldhands.jersey.properties.injection.Property;
+import dev.coldhands.jersey.properties.deserialise.Property;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;

@@ -15,17 +15,19 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.injection;
+package dev.coldhands.jersey.properties.deserialise;
 
+public interface ResolutionFailureBehaviour {
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+    static ResolutionFailureBehaviour defaultBehaviour() {
+        return propertyName -> propertyName;
+    }
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
-public @interface Property {
+    static ResolutionFailureBehaviour throwException() {
+        return propertyName -> {
+            throw new MissingPropertyException(propertyName);
+        };
+    }
 
-    String value();
+    String onMissingProperty(String propertyName);
 }

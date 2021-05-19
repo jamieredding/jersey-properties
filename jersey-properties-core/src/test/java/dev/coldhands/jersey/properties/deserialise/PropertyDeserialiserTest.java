@@ -15,7 +15,7 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.injection;
+package dev.coldhands.jersey.properties.deserialise;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
