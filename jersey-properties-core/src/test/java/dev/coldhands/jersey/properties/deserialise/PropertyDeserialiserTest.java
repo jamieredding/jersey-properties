@@ -94,53 +94,6 @@ class PropertyDeserialiserTest {
     }
 
     @Nested
-    class BuilderFieldsAreNull {
-
-        @Test
-        void whenPropertyResolverIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder((PropertyResolver) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("PropertyResolver must not be null");
-        }
-
-        @Test
-        void whenPropertyResolverSupplierIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder((Supplier<PropertyResolver>) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("PropertyResolver must not be null");
-        }
-
-        @Test
-        void whenResolutionFailureBehaviourIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
-                    .withResolutionFailureBehaviour((ResolutionFailureBehaviour) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("ResolutionFailureBehaviour must not be null");
-        }
-
-        @Test
-        void whenResolutionFailureBehaviourSupplierIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
-                    .withResolutionFailureBehaviour((Supplier<ResolutionFailureBehaviour>) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("ResolutionFailureBehaviour must not be null");
-        }
-
-        @Test
-        void whenDeserialiserRegistriesAreNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
-                    .withDeserialiserRegistries(null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("DeserialiserRegistries must not be null");
-        }
-    }
-
-    @Nested
     class PropertyMissing {
 
         @Test
@@ -222,6 +175,53 @@ class PropertyDeserialiserTest {
                     .isInstanceOf(InvocationTargetException.class)
                     .getCause()
                     .hasMessageContainingAll("No enum constant", MyEnum.class.getSimpleName(), expectedPropertyValue);
+        }
+    }
+
+    @Nested
+    class BuilderFieldsAreNull {
+
+        @Test
+        void whenPropertyResolverIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder((PropertyResolver) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("PropertyResolver must not be null");
+        }
+
+        @Test
+        void whenPropertyResolverSupplierIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder((Supplier<PropertyResolver>) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("PropertyResolver must not be null");
+        }
+
+        @Test
+        void whenResolutionFailureBehaviourIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withResolutionFailureBehaviour((ResolutionFailureBehaviour) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("ResolutionFailureBehaviour must not be null");
+        }
+
+        @Test
+        void whenResolutionFailureBehaviourSupplierIsNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withResolutionFailureBehaviour((Supplier<ResolutionFailureBehaviour>) null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("ResolutionFailureBehaviour must not be null");
+        }
+
+        @Test
+        void whenDeserialiserRegistriesAreNull_thenThrowIllegalArgumentException() {
+            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
+                    .withDeserialiserRegistries(null)
+                    .build())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("DeserialiserRegistries must not be null");
         }
     }
 }
