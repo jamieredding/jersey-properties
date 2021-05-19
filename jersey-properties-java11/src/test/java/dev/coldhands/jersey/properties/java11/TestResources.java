@@ -102,25 +102,30 @@ class TestResources {
 
     private static Response getResponse(String type, String stringField, Integer integerField, int intField, MyEnum enumField) {
         final Object entity;
+        final Class<?> clazz;
         switch (type) {
             case "stringField":
                 entity = stringField;
+                clazz = stringField.getClass();
                 break;
             case "integerField":
                 entity = integerField;
+                clazz = integerField.getClass();
                 break;
             case "intField":
                 entity = intField;
+                clazz = int.class;
                 break;
             case "enumField":
                 entity = enumField;
+                clazz = enumField.getClass();
                 break;
             default:
                 throw new IllegalArgumentException(type + " is not a supported type");
         }
         return Response.ok()
                 .entity(entity.toString())
-                .header("javaType", entity.getClass().getTypeName())
+                .header("javaType", clazz.getTypeName())
                 .build();
     }
 

@@ -20,6 +20,8 @@ package dev.coldhands.jersey.properties.java11;
 import com.sun.net.httpserver.HttpServer;
 import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
 import dev.coldhands.jersey.properties.deserialise.MissingDeserialiserException;
+import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +36,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
@@ -44,6 +47,7 @@ import static jakarta.ws.rs.core.UriBuilder.fromUri;
 import static java.net.http.HttpClient.newHttpClient;
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class PropertyInjectionResolverTest {
@@ -74,7 +78,7 @@ class PropertyInjectionResolverTest {
         return Stream.of(
                 arguments("stringField", (TypeResolver) s -> s, String.class),
                 arguments("integerField", (TypeResolver) Integer::valueOf, Integer.class),
-                arguments("intField", (TypeResolver) Integer::parseInt, Integer.class),
+                arguments("intField", (TypeResolver) Integer::parseInt, int.class),
                 arguments("enumField", (TypeResolver) MyEnum::valueOf, MyEnum.class));
     }
 
@@ -83,8 +87,7 @@ class PropertyInjectionResolverTest {
     void whenFieldAnnotatedProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(FieldInjectionPropertyLookupResource.class)
-                .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class));
+                .register(new PropertyInjectionFeature(PROPERTIES::get)));
 
         final HttpResponse<String> response = makeGetRequest(fromUri(baseUri)
                 .path("/fieldInjection")
@@ -100,8 +103,7 @@ class PropertyInjectionResolverTest {
     void whenConstructorAnnotatedWithProperty_thenInjectWithTheTypeResolvedValueFoundInThePropertyResolver(String fieldName, TypeResolver typeResolver, Class<?> expectedJavaType) throws IOException, InterruptedException {
         httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(ConstructorInjectionPropertyLookupResource.class)
-                .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(PropertyInjectionFeature.class));
+                .register(new PropertyInjectionFeature(PROPERTIES::get)));
 
         final HttpResponse<String> response = makeGetRequest(fromUri(baseUri)
                 .path("/constructorInjection")
@@ -113,20 +115,45 @@ class PropertyInjectionResolverTest {
     }
 
     @Test
-    void whenACustomDeserialiserRegistryIsProvided_thenDeserialiseWithThatInsteadOfTheDefault() throws IOException, InterruptedException {
+    void whenConstructedWithPropertyResolver_thenOnlyDeserialiserRegistryIsDefaultRegistry() throws IOException, InterruptedException {
         httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                 .register(FieldInjectionPropertyLookupResource.class)
-                .register(new PropertyResolverFeature(PROPERTIES::get))
-                .register(new PropertyInjectionFeature()
-                        .withAdditionalDeserialiserRegistry(DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build())));
+                .register(new PropertyInjectionFeature(PROPERTIES::get)));
 
         final HttpResponse<String> response = makeGetRequest(fromUri(baseUri)
                 .path("/fieldInjection")
-                .queryParam("type", "stringField"));
+                .queryParam("type", "intField"));
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).isEqualTo("overriddenValue");
-        assertThat(response.headers().firstValue("javaType")).hasValue(String.class.getTypeName());
+        assertThat(response.body()).isEqualTo("456");
+        assertThat(response.headers().firstValue("javaType")).hasValue(int.class.getTypeName());
+    }
+
+    @Test
+    void whenConstructedWithPropertyResolver_thenResolutionFailureBehaviourIsDefaultBehaviour() throws IOException, InterruptedException {
+        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
+                .register(StringPropertyLookupResource.class)
+                .register(new PropertyInjectionFeature(propertyName -> null)));
+
+        final HttpResponse<String> response = makeGetRequest(fromUri(baseUri)
+                .path("/stringProperty"));
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("propertyName");
+    }
+
+    @Test
+    void whenConstructedWithNullPropertyResolver_thenThrowIllegalArgumentException() {
+        assertThatThrownBy(() -> new PropertyInjectionFeature((PropertyResolver) null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PropertyResolver must not be null");
+    }
+
+    @Test
+    void whenConstructedWithNullPropertyDeserialiser_thenThrowIllegalArgumentException() {
+        assertThatThrownBy(() -> new PropertyInjectionFeature((PropertyDeserialiser) null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("PropertyDeserialiser must not be null");
     }
 
     @Nested
@@ -136,29 +163,13 @@ class PropertyInjectionResolverTest {
         void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(StringPropertyLookupResource.class)
-                    .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(PropertyInjectionFeature.class));
+                    .register(new PropertyInjectionFeature(propertyName -> null)));
 
             final HttpResponse<String> response = makeGetRequest(fromUri(baseUri).path("/stringProperty"));
 
             assertThat(response.statusCode()).isEqualTo(200);
             assertThat(response.body()).isEqualTo("propertyName");
         }
-
-        @Test
-        void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
-            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                    .register(StringPropertyLookupResource.class)
-                    .register(new PropertyResolverFeature(propertyName -> null))
-                    .register(new PropertyInjectionFeature()
-                            .withResolutionFailureBehaviour(propertyName -> propertyName + "-value")));
-
-            final HttpResponse<String> response = makeGetRequest(fromUri(baseUri).path("/stringProperty"));
-
-            assertThat(response.statusCode()).isEqualTo(200);
-            assertThat(response.body()).isEqualTo("propertyName-value");
-        }
-
     }
 
     @Nested
@@ -170,9 +181,10 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(StringPropertyLookupResource.class)
-                    .register(new PropertyResolverFeature(PROPERTIES::get))
-                    .register(new PropertyInjectionFeature()
-                            .withDefaultDeserialiserRegistry(DeserialiserRegistry.builder().build()))
+                    .register(new PropertyInjectionFeature(PropertyDeserialiser.builder()
+                            .withPropertyResolver(PROPERTIES::get)
+                            .withDeserialiserRegistries(List.of(aDeserialiserRegistryThatHasNoDeserialisersConfigured()))
+                            .build()))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             makeGetRequest(fromUri(baseUri).path("/stringProperty"));
@@ -190,6 +202,10 @@ class PropertyInjectionResolverTest {
                                     .hasMessage("No deserialiser configured for type: " + String.class.getTypeName()));
 
         }
+
+        private DeserialiserRegistry aDeserialiserRegistryThatHasNoDeserialisersConfigured() {
+            return DeserialiserRegistry.builder().build();
+        }
     }
 
     @Nested
@@ -201,8 +217,7 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(ParameterizedTypeResource.class)
-                    .register(new PropertyResolverFeature(PROPERTIES::get))
-                    .register(PropertyInjectionFeature.class)
+                    .register(new PropertyInjectionFeature(PROPERTIES::get))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             makeGetRequest(fromUri(baseUri).path("/parameterizedType"));
@@ -225,8 +240,7 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(GenericArrayTypeInjection.class)
-                    .register(new PropertyResolverFeature(PROPERTIES::get))
-                    .register(PropertyInjectionFeature.class)
+                    .register(new PropertyInjectionFeature(PROPERTIES::get))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             makeGetRequest(fromUri(baseUri).path("/genericArrayType"));
@@ -249,8 +263,7 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(GenericArrayTypeInjection2.class)
-                    .register(new PropertyResolverFeature(PROPERTIES::get))
-                    .register(PropertyInjectionFeature.class)
+                    .register(new PropertyInjectionFeature(PROPERTIES::get))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             makeGetRequest(fromUri(baseUri).path("/genericArrayType2"));
@@ -273,8 +286,7 @@ class PropertyInjectionResolverTest {
             final var exceptionCapture = new ExceptionCapture();
             httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
                     .register(TypeVariableInjection.class)
-                    .register(new PropertyResolverFeature(PROPERTIES::get))
-                    .register(PropertyInjectionFeature.class)
+                    .register(new PropertyInjectionFeature(PROPERTIES::get))
                     .register(new AssertingRequestEventListener(countDownLatch, exceptionCapture)));
 
             makeGetRequest(fromUri(baseUri).path("/typeVariable"));

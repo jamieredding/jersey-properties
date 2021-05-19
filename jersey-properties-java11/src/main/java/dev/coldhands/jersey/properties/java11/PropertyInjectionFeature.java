@@ -17,10 +17,9 @@
 
 package dev.coldhands.jersey.properties.java11;
 
-import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
 import dev.coldhands.jersey.properties.deserialise.Property;
 import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
-import dev.coldhands.jersey.properties.deserialise.ResolutionFailureBehaviour;
+import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
@@ -28,25 +27,24 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-class PropertyInjectionFeature implements Feature {
+public class PropertyInjectionFeature implements Feature {
 
-    private ResolutionFailureBehaviour resolutionFailureBehaviour = ResolutionFailureBehaviour.defaultBehaviour();
-    private DeserialiserRegistry deserialiserRegistry = DeserialiserRegistry.defaultRegistry();
-    private DeserialiserRegistry additionalDeserialiserRegistry;
+    private final PropertyDeserialiser propertyDeserialiser;
 
-    public PropertyInjectionFeature withResolutionFailureBehaviour(ResolutionFailureBehaviour resolutionFailureBehaviour) {
-        this.resolutionFailureBehaviour = resolutionFailureBehaviour;
-        return this;
+    public PropertyInjectionFeature(PropertyResolver propertyResolver) {
+        if (propertyResolver == null) {
+            throw new IllegalArgumentException("PropertyResolver must not be null");
+        }
+        this.propertyDeserialiser = PropertyDeserialiser.builder()
+                .withPropertyResolver(() -> propertyResolver)
+                .build();
     }
 
-    public PropertyInjectionFeature withDefaultDeserialiserRegistry(DeserialiserRegistry deserialiserRegistry) {
-        this.deserialiserRegistry = deserialiserRegistry;
-        return this;
-    }
-
-    public PropertyInjectionFeature withAdditionalDeserialiserRegistry(DeserialiserRegistry deserialiserRegistry) {
-        additionalDeserialiserRegistry = deserialiserRegistry;
-        return this;
+    public PropertyInjectionFeature(PropertyDeserialiser propertyDeserialiser) {
+        if (propertyDeserialiser == null) {
+            throw new IllegalArgumentException("PropertyDeserialiser must not be null");
+        }
+        this.propertyDeserialiser = propertyDeserialiser;
     }
 
     @Override
@@ -54,23 +52,12 @@ class PropertyInjectionFeature implements Feature {
         context.register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(resolutionFailureBehaviour)
-                        .to(ResolutionFailureBehaviour.class);
-                bindFactory(PropertyDeserialiserFactory.class)
-                        .to(PropertyDeserialiser.class)
-                        .in(Singleton.class);
+                bind(propertyDeserialiser).to(PropertyDeserialiser.class);
+
                 bind(PropertyInjectionResolver.class)
                         .to(new TypeLiteral<InjectionResolver<Property>>() {
                         })
                         .in(Singleton.class);
-                bind(deserialiserRegistry)
-                        .to(DeserialiserRegistry.class)
-                        .ranked(0);
-                if (additionalDeserialiserRegistry != null) {
-                    bind(additionalDeserialiserRegistry)
-                            .to(DeserialiserRegistry.class)
-                            .ranked(1);
-                }
             }
         });
 
