@@ -17,8 +17,8 @@
 
 package dev.coldhands.jersey.properties.deserialise;
 
-class MissingPropertyException extends RuntimeException {
+class MissingPropertyException extends PropertyException {
     public MissingPropertyException(String propertyName) {
-        super("Could not find property with name: "+ propertyName);
+        super("Could not find property with name: " + propertyName);
     }
 }

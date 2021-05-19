@@ -17,7 +17,7 @@
 
 package dev.coldhands.jersey.properties.deserialise;
 
-class DeserialiserException extends RuntimeException {
+class DeserialiserException extends PropertyException {
     public DeserialiserException(String propertyName, String propertyValue, Class<?> injecteeClass, Exception cause) {
         super(String.format("Exception thrown while deserialising property: %s=%s as type: %s", propertyName, propertyValue, injecteeClass.getTypeName()), cause);
     }

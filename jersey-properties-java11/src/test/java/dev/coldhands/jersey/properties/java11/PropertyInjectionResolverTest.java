@@ -19,7 +19,6 @@ package dev.coldhands.jersey.properties.java11;
 
 import com.sun.net.httpserver.HttpServer;
 import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
-import dev.coldhands.jersey.properties.deserialise.MissingDeserialiserException;
 import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
 import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 import jakarta.ws.rs.core.UriBuilder;
@@ -194,12 +193,7 @@ class PropertyInjectionResolverTest {
             assertThat(((MultiException) actualException).getErrors())
                     .anySatisfy(throwable ->
                             assertThat(throwable).isInstanceOf(IllegalStateException.class)
-                                    .hasMessageContaining("Unable to perform operation: resolve"))
-                    .anySatisfy(throwable ->
-                            assertThat(throwable)
-                                    .isInstanceOf(MissingDeserialiserException.class)
-                                    .hasMessage("No deserialiser configured for type: " + String.class.getTypeName()));
-
+                                    .hasMessageContaining("Unable to perform operation: resolve"));
         }
 
         private DeserialiserRegistry aDeserialiserRegistryThatHasNoDeserialisersConfigured() {

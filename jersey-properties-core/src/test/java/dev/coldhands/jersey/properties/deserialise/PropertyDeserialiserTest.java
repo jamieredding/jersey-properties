@@ -61,7 +61,7 @@ class PropertyDeserialiserTest {
 
     @ParameterizedTest
     @MethodSource("fieldNameToValueAndType")
-    void whenPropertyExists_thenDeserialiseForExpectedType(String propertyName, TypeResolver typeResolver, Class<?> expectedJavaType) {
+    void whenPropertyExists_thenDeserialiseForExpectedType(String propertyName, TypeResolver typeResolver, Class<?> expectedJavaType) throws PropertyException {
         final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .build();
 
@@ -70,7 +70,7 @@ class PropertyDeserialiserTest {
     }
 
     @Test
-    void whenMultipleDeserialiserRegistriesAreConfiguredToSupportAType_thenDeserialiseWithFirstThatSupportsThatType() {
+    void whenMultipleDeserialiserRegistriesAreConfiguredToSupportAType_thenDeserialiseWithFirstThatSupportsThatType() throws PropertyException {
         final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .withDeserialiserRegistries(List.of(
                         DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
@@ -82,7 +82,7 @@ class PropertyDeserialiserTest {
     }
 
     @Test
-    void whenMultipleDeserialiserRegistriesAreConfiguredButOnlySecondSupportsThatType_thenUseDeserialiserInSecondRegistry() {
+    void whenMultipleDeserialiserRegistriesAreConfiguredButOnlySecondSupportsThatType_thenUseDeserialiserInSecondRegistry() throws PropertyException {
         final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
                 .withDeserialiserRegistries(List.of(
                         DeserialiserRegistry.builder().put(String.class, s -> "overriddenValue").build(),
@@ -97,7 +97,7 @@ class PropertyDeserialiserTest {
     class PropertyMissing {
 
         @Test
-        void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() {
+        void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws PropertyException {
             final var underTest = PropertyDeserialiser.builder(propertyName -> null).build();
 
             assertThat(underTest.deserialise("anyProperty", String.class))
@@ -112,12 +112,13 @@ class PropertyDeserialiserTest {
                     .build();
 
             assertThatThrownBy(() -> underTest.deserialise("anyProperty", String.class))
+                    .isInstanceOf(PropertyException.class)
                     .isInstanceOf(MissingPropertyException.class)
                     .hasMessage("Could not find property with name: anyProperty");
         }
 
         @Test
-        void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() {
+        void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws PropertyException {
             final var underTest = PropertyDeserialiser.builder(propertyName -> null)
                     .withResolutionFailureBehaviour(propertyName -> propertyName + "-value")
                     .build();
@@ -138,6 +139,7 @@ class PropertyDeserialiserTest {
                     .build();
 
             assertThatThrownBy(() -> underTest.deserialise("anyProperty", String.class))
+                    .isInstanceOf(PropertyException.class)
                     .isInstanceOf(MissingDeserialiserException.class)
                     .hasMessage("No deserialiser configured for type: " + String.class.getTypeName());
         }
@@ -157,6 +159,7 @@ class PropertyDeserialiserTest {
                     .build();
 
             assertThatThrownBy(() -> underTest.deserialise("propertyName", String.class))
+                    .isInstanceOf(PropertyException.class)
                     .isInstanceOf(DeserialiserException.class)
                     .hasMessage("Exception thrown while deserialising property: propertyName=propertyValue as type: " + String.class.getTypeName())
                     .getCause()
@@ -169,12 +172,58 @@ class PropertyDeserialiserTest {
             final var underTest = PropertyDeserialiser.builder(s -> expectedPropertyValue).build();
 
             assertThatThrownBy(() -> underTest.deserialise("invalidEnum", MyEnum.class))
+                    .isInstanceOf(PropertyException.class)
                     .isInstanceOf(DeserialiserException.class)
                     .hasMessage("Exception thrown while deserialising property: invalidEnum=" + expectedPropertyValue + " as type: " + MyEnum.class.getTypeName())
                     .getCause()
                     .isInstanceOf(InvocationTargetException.class)
                     .getCause()
                     .hasMessageContainingAll("No enum constant", MyEnum.class.getSimpleName(), expectedPropertyValue);
+        }
+    }
+
+    @Nested
+    class OptionalDeserialise {
+
+        @Test
+        void whenPropertyCanBeDeserialised_thenReturnOptionalOfValue() {
+            final var underTest = PropertyDeserialiser.builder(PROPERTIES::get).build();
+
+            assertThat(underTest.optionalDeserialise("intField", int.class))
+                    .contains(456);
+        }
+
+        @Test
+        void whenPropertyIsMissing_thenReturnOptionalEmpty() {
+            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
+                    .withResolutionFailureBehaviour(ResolutionFailureBehaviour.throwException()).build();
+
+            assertThat(underTest.optionalDeserialise("intField", int.class))
+                    .isEmpty();
+        }
+
+        @Test
+        void whenMissingDeserialiser_thenReturnOptionalEmpty() {
+            final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
+                    .withDeserialiserRegistries(List.of(DeserialiserRegistry.builder().build()))
+                    .build();
+
+            assertThat(underTest.optionalDeserialise("intField", int.class))
+                    .isEmpty();
+        }
+
+        @Test
+        void whenUnableToDeserialise_thenReturnOptionalEmpty() {
+            final var underTest = PropertyDeserialiser.builder(PROPERTIES::get)
+                    .withDeserialiserRegistries(List.of(DeserialiserRegistry.builder()
+                            .put(int.class, i -> {
+                                throw new RuntimeException("Won't deserialise");
+                            })
+                            .build()))
+                    .build();
+
+            assertThat(underTest.optionalDeserialise("intField", int.class))
+                    .isEmpty();
         }
     }
 

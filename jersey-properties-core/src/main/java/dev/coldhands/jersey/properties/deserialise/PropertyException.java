@@ -17,17 +17,12 @@
 
 package dev.coldhands.jersey.properties.deserialise;
 
-public interface ResolutionFailureBehaviour {
-
-    static ResolutionFailureBehaviour defaultBehaviour() {
-        return propertyName -> propertyName;
+public class PropertyException extends Exception {
+    public PropertyException(String message) {
+        super(message);
     }
 
-    static ResolutionFailureBehaviour throwException() {
-        return propertyName -> {
-            throw new MissingPropertyException(propertyName);
-        };
+    public PropertyException(String message, Exception cause) {
+        super(message, cause);
     }
-
-    String onMissingProperty(String propertyName) throws PropertyException;
 }

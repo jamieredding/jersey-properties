@@ -38,28 +38,42 @@ public class PropertyDeserialiser {
     }
 
     // todo add overloaded method that takes Property annotation
-    public <T> T deserialise(String propertyName, Class<T> requiredType) {
+    public <T> T deserialise(String propertyName, Class<T> requiredType) throws PropertyException {
         final String propertyValue = lookupPropertyValue(propertyName);
 
         return deserialiseValueToCorrectType(propertyName, propertyValue, requiredType);
     }
 
-    private String lookupPropertyValue(String propertyName) {
-        return propertyResolverSupplier.get()
-                .getOptionalProperty(propertyName)
-                .orElseGet(() -> resolutionFailureBehaviourSupplier.get().onMissingProperty(propertyName));
+    public <T> Optional<T> optionalDeserialise(String propertyName, Class<T> requiredType) {
+        try {
+            return Optional.of(deserialise(propertyName, requiredType));
+        } catch (PropertyException e) {
+            return Optional.empty();
+        }
     }
 
-    private <T> T deserialiseValueToCorrectType(String propertyName, String propertyValue, Class<T> requiredType) {
-        return getDeserialiser(requiredType)
-                .map(deserialiser -> {
-                    try {
-                        return deserialiser.deserialise(propertyValue);
-                    } catch (Exception e) {
-                        throw new DeserialiserException(propertyName, propertyValue, requiredType, e);
-                    }
-                })
-                .orElseThrow(() -> new MissingDeserialiserException(requiredType));
+    private String lookupPropertyValue(String propertyName) throws PropertyException {
+        final Optional<String> optionalProperty = propertyResolverSupplier.get()
+                .getOptionalProperty(propertyName);
+        if (optionalProperty.isPresent()) {
+            return optionalProperty.get();
+        } else {
+            return resolutionFailureBehaviourSupplier.get()
+                    .onMissingProperty(propertyName);
+        }
+    }
+
+    private <T> T deserialiseValueToCorrectType(String propertyName, String propertyValue, Class<T> requiredType) throws PropertyException {
+        final Optional<Deserialiser<T>> deserialiser = getDeserialiser(requiredType);
+        if (deserialiser.isPresent()) {
+            try {
+                return deserialiser.get().deserialise(propertyValue);
+            } catch (Exception e) {
+                throw new DeserialiserException(propertyName, propertyValue, requiredType, e);
+            }
+        } else {
+            throw new MissingDeserialiserException(requiredType);
+        }
     }
 
     private <T> Optional<Deserialiser<T>> getDeserialiser(Class<T> requiredType) {
