@@ -20,7 +20,7 @@ package dev.coldhands.jersey.properties.injection;
 import dev.coldhands.jersey.properties.resolver.PropertyResolver;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
@@ -31,7 +31,7 @@ public class PropertyDeserialiser {
     private final Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier;
     private final Iterable<DeserialiserRegistry> deserialiserRegistries;
 
-    public PropertyDeserialiser(Supplier<PropertyResolver> propertyResolverSupplier, Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier, Iterable<DeserialiserRegistry> deserialiserRegistries) {
+    private PropertyDeserialiser(Supplier<PropertyResolver> propertyResolverSupplier, Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier, Iterable<DeserialiserRegistry> deserialiserRegistries) {
         this.propertyResolverSupplier = propertyResolverSupplier;
         this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
         this.deserialiserRegistries = deserialiserRegistries;
@@ -93,4 +93,43 @@ public class PropertyDeserialiser {
             return (T) method.invoke(typeAsClass, propertyValue);
         }
     }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private Supplier<PropertyResolver> propertyResolverSupplier;
+        private Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier = ResolutionFailureBehaviour::defaultBehaviour;
+        private Iterable<DeserialiserRegistry> deserialiserRegistries = List.of(DeserialiserRegistry.defaultRegistry());
+
+        public Builder withPropertyResolver(PropertyResolver propertyResolver) {
+            return withPropertyResolver(() -> propertyResolver);
+        }
+
+        public Builder withPropertyResolver(Supplier<PropertyResolver> propertyResolverSupplier) {
+            this.propertyResolverSupplier = propertyResolverSupplier;
+            return this;
+        }
+
+        public Builder withResolutionFailureBehaviour(ResolutionFailureBehaviour resolutionFailureBehaviour) {
+            return withResolutionFailureBehaviour(() -> resolutionFailureBehaviour);
+        }
+
+        public Builder withResolutionFailureBehaviour(Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier) {
+            this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
+            return this;
+        }
+
+        public Builder withDeserialiserRegistries(Iterable<DeserialiserRegistry> deserialiserRegistries) {
+            this.deserialiserRegistries = deserialiserRegistries;
+            return this;
+        }
+
+        public PropertyDeserialiser build() {
+            return new PropertyDeserialiser(propertyResolverSupplier, resolutionFailureBehaviourSupplier, deserialiserRegistries);
+        }
+    }
+
 }

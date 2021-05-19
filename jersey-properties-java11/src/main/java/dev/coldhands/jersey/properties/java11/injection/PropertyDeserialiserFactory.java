@@ -37,7 +37,11 @@ class PropertyDeserialiserFactory implements Factory<PropertyDeserialiser> {
 
     @Override
     public PropertyDeserialiser provide() {
-        return new PropertyDeserialiser(propertyResolverProvider::get, resolutionFailureBehaviourProvider::get, deserialiserRegistries);
+        return PropertyDeserialiser.builder()
+                .withPropertyResolver(propertyResolverProvider::get)
+                .withResolutionFailureBehaviour(resolutionFailureBehaviourProvider::get)
+                .withDeserialiserRegistries(deserialiserRegistries)
+                .build();
     }
 
     @Override
