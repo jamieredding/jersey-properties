@@ -129,19 +129,6 @@ class PropertyInjectionResolverTest {
     }
 
     @Test
-    void whenConstructedWithPropertyResolver_thenResolutionFailureBehaviourIsDefaultBehaviour() throws IOException, InterruptedException {
-        httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                .register(StringPropertyLookupResource.class)
-                .register(new PropertyInjectionFeature(propertyName -> null)));
-
-        final HttpResponse<String> response = makeGetRequest(fromUri(baseUri)
-                .path("/stringProperty"));
-
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).isEqualTo("propertyName");
-    }
-
-    @Test
     void whenConstructedWithNullPropertyResolver_thenThrowIllegalArgumentException() {
         assertThatThrownBy(() -> new PropertyInjectionFeature((PropertyResolver) null))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -153,22 +140,6 @@ class PropertyInjectionResolverTest {
         assertThatThrownBy(() -> new PropertyInjectionFeature((PropertyDeserialiser) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("PropertyDeserialiser must not be null");
-    }
-
-    @Nested
-    class PropertyMissing {
-
-        @Test
-        void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws IOException, InterruptedException {
-            httpServer = TestHttpServerFactory.createHttpServer(baseUri, config -> config
-                    .register(StringPropertyLookupResource.class)
-                    .register(new PropertyInjectionFeature(propertyName -> null)));
-
-            final HttpResponse<String> response = makeGetRequest(fromUri(baseUri).path("/stringProperty"));
-
-            assertThat(response.statusCode()).isEqualTo(200);
-            assertThat(response.body()).isEqualTo("propertyName");
-        }
     }
 
     @Nested

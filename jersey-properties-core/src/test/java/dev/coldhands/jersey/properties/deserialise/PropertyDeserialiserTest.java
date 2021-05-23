@@ -97,34 +97,13 @@ class PropertyDeserialiserTest {
     class PropertyMissing {
 
         @Test
-        void defaultBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws PropertyException {
+        void whenPropertyIsMissing_thenThrowExceptionToCauseResolutionToFail() {
             final var underTest = PropertyDeserialiser.builder(propertyName -> null).build();
-
-            assertThat(underTest.deserialise("anyProperty", String.class))
-                    .isEqualTo("anyProperty");
-        }
-
-        @Test
-        void throwExceptionOnMissingPropertyBehaviour_whenPropertyIsMissing_thenThrowExceptionToCauseResolutionToFail() {
-            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
-                    .withResolutionFailureBehaviour(ResolutionFailureBehaviour.throwException())
-                    .withDeserialiserRegistries(List.of())
-                    .build();
 
             assertThatThrownBy(() -> underTest.deserialise("anyProperty", String.class))
                     .isInstanceOf(PropertyException.class)
                     .isInstanceOf(MissingPropertyException.class)
                     .hasMessage("Could not find property with name: anyProperty");
-        }
-
-        @Test
-        void configuredBehaviour_whenPropertyIsMissing_thenInjectPropertyName() throws PropertyException {
-            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
-                    .withResolutionFailureBehaviour(propertyName -> propertyName + "-value")
-                    .build();
-
-            assertThat(underTest.deserialise("anyProperty", String.class))
-                    .isEqualTo("anyProperty-value");
         }
 
     }
@@ -138,7 +117,7 @@ class PropertyDeserialiserTest {
                     .withDeserialiserRegistries(List.of(DeserialiserRegistry.builder().build()))
                     .build();
 
-            assertThatThrownBy(() -> underTest.deserialise("anyProperty", String.class))
+            assertThatThrownBy(() -> underTest.deserialise("stringField", String.class))
                     .isInstanceOf(PropertyException.class)
                     .isInstanceOf(MissingDeserialiserException.class)
                     .hasMessage("No deserialiser configured for type: " + String.class.getTypeName());
@@ -195,8 +174,7 @@ class PropertyDeserialiserTest {
 
         @Test
         void whenPropertyIsMissing_thenReturnOptionalEmpty() {
-            final var underTest = PropertyDeserialiser.builder(propertyName -> null)
-                    .withResolutionFailureBehaviour(ResolutionFailureBehaviour.throwException()).build();
+            final var underTest = PropertyDeserialiser.builder(propertyName -> null).build();
 
             assertThat(underTest.optionalDeserialise("intField", int.class))
                     .isEmpty();
@@ -244,24 +222,6 @@ class PropertyDeserialiserTest {
                     .build())
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("PropertyResolver must not be null");
-        }
-
-        @Test
-        void whenResolutionFailureBehaviourIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
-                    .withResolutionFailureBehaviour((ResolutionFailureBehaviour) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("ResolutionFailureBehaviour must not be null");
-        }
-
-        @Test
-        void whenResolutionFailureBehaviourSupplierIsNull_thenThrowIllegalArgumentException() {
-            assertThatThrownBy(() -> PropertyDeserialiser.builder(a -> a)
-                    .withResolutionFailureBehaviour((Supplier<ResolutionFailureBehaviour>) null)
-                    .build())
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("ResolutionFailureBehaviour must not be null");
         }
 
         @Test

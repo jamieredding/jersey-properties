@@ -28,12 +28,10 @@ import java.util.stream.StreamSupport;
 public class PropertyDeserialiser {
 
     private final Supplier<PropertyResolver> propertyResolverSupplier;
-    private final Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier;
     private final Iterable<DeserialiserRegistry> deserialiserRegistries;
 
-    private PropertyDeserialiser(Supplier<PropertyResolver> propertyResolverSupplier, Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier, Iterable<DeserialiserRegistry> deserialiserRegistries) {
+    private PropertyDeserialiser(Supplier<PropertyResolver> propertyResolverSupplier, Iterable<DeserialiserRegistry> deserialiserRegistries) {
         this.propertyResolverSupplier = propertyResolverSupplier;
-        this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
         this.deserialiserRegistries = deserialiserRegistries;
     }
 
@@ -58,8 +56,7 @@ public class PropertyDeserialiser {
         if (optionalProperty.isPresent()) {
             return optionalProperty.get();
         } else {
-            return resolutionFailureBehaviourSupplier.get()
-                    .onMissingProperty(propertyName);
+            throw new MissingPropertyException(propertyName);
         }
     }
 
@@ -122,7 +119,6 @@ public class PropertyDeserialiser {
 
         private final Supplier<PropertyResolver> propertyResolverSupplier;
 
-        private Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier = ResolutionFailureBehaviour::defaultBehaviour;
         private Iterable<DeserialiserRegistry> deserialiserRegistries = List.of(DeserialiserRegistry.defaultRegistry());
 
         private Builder(PropertyResolver propertyResolver) {
@@ -133,17 +129,6 @@ public class PropertyDeserialiser {
             this.propertyResolverSupplier = propertyResolverSupplier;
         }
 
-        public Builder withResolutionFailureBehaviour(ResolutionFailureBehaviour resolutionFailureBehaviour) {
-            checkNotNull(resolutionFailureBehaviour, "ResolutionFailureBehaviour");
-            return withResolutionFailureBehaviour(() -> resolutionFailureBehaviour);
-        }
-
-        public Builder withResolutionFailureBehaviour(Supplier<ResolutionFailureBehaviour> resolutionFailureBehaviourSupplier) {
-            checkNotNull(resolutionFailureBehaviourSupplier, "ResolutionFailureBehaviour");
-            this.resolutionFailureBehaviourSupplier = resolutionFailureBehaviourSupplier;
-            return this;
-        }
-
         public Builder withDeserialiserRegistries(Iterable<DeserialiserRegistry> deserialiserRegistries) {
             checkNotNull(deserialiserRegistries, "DeserialiserRegistries");
             this.deserialiserRegistries = deserialiserRegistries;
@@ -151,7 +136,7 @@ public class PropertyDeserialiser {
         }
 
         public PropertyDeserialiser build() {
-            return new PropertyDeserialiser(propertyResolverSupplier, resolutionFailureBehaviourSupplier, deserialiserRegistries);
+            return new PropertyDeserialiser(propertyResolverSupplier, deserialiserRegistries);
         }
     }
 
