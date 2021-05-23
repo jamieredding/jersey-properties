@@ -15,7 +15,7 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.core.resolver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

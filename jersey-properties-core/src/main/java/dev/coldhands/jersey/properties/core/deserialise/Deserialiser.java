@@ -15,10 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-class MissingPropertyException extends PropertyException {
-    public MissingPropertyException(String propertyName) {
-        super("Could not find property with name: " + propertyName);
-    }
+@FunctionalInterface
+public interface Deserialiser<T> {
+
+    T deserialise(String value) throws Exception;
 }

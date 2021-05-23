@@ -15,17 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
-public @interface Property {
-
-    String value();
+class MissingPropertyException extends PropertyException {
+    public MissingPropertyException(String propertyName) {
+        super("Could not find property with name: " + propertyName);
+    }
 }

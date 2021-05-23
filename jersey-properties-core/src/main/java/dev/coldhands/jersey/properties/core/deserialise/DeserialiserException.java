@@ -15,16 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.resolver;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
-
-public interface PropertyResolver {
-    String getProperty(String propertyName);
-
-    default Optional<String> getOptionalProperty(String propertyName) {
-        return ofNullable(getProperty(propertyName));
+class DeserialiserException extends PropertyException {
+    public DeserialiserException(String propertyName, String propertyValue, Class<?> injecteeClass, Exception cause) {
+        super(String.format("Exception thrown while deserialising property: %s=%s as type: %s", propertyName, propertyValue, injecteeClass.getTypeName()), cause);
     }
 }

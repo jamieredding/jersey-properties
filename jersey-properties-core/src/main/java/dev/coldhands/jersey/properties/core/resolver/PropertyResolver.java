@@ -15,10 +15,16 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.resolver;
 
-class MissingDeserialiserException extends PropertyException {
-    public MissingDeserialiserException(Class<?> injecteeClass) {
-        super("No deserialiser configured for type: " + injecteeClass.getTypeName());
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
+
+public interface PropertyResolver {
+    String getProperty(String propertyName);
+
+    default Optional<String> getOptionalProperty(String propertyName) {
+        return ofNullable(getProperty(propertyName));
     }
 }

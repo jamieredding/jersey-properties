@@ -18,9 +18,9 @@
 package dev.coldhands.jersey.properties.jakarta;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.coldhands.jersey.properties.deserialise.DeserialiserRegistry;
-import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
-import dev.coldhands.jersey.properties.resolver.PropertyResolver;
+import dev.coldhands.jersey.properties.core.deserialise.DeserialiserRegistry;
+import dev.coldhands.jersey.properties.core.deserialise.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.core.resolver.PropertyResolver;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.hk2.api.MultiException;
 import org.junit.jupiter.api.AfterEach;

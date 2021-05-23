@@ -17,7 +17,7 @@
 
 package dev.coldhands.jersey.properties.jakarta;
 
-import dev.coldhands.jersey.properties.deserialise.Property;
+import dev.coldhands.jersey.properties.core.deserialise.Property;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;

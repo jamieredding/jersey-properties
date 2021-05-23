@@ -15,10 +15,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-@FunctionalInterface
-public interface Deserialiser<T> {
-
-    T deserialise(String value) throws Exception;
+class MissingDeserialiserException extends PropertyException {
+    public MissingDeserialiserException(Class<?> injecteeClass) {
+        super("No deserialiser configured for type: " + injecteeClass.getTypeName());
+    }
 }

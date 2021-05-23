@@ -15,10 +15,17 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-class DeserialiserException extends PropertyException {
-    public DeserialiserException(String propertyName, String propertyValue, Class<?> injecteeClass, Exception cause) {
-        super(String.format("Exception thrown while deserialising property: %s=%s as type: %s", propertyName, propertyValue, injecteeClass.getTypeName()), cause);
-    }
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
+public @interface Property {
+
+    String value();
 }

@@ -17,9 +17,9 @@
 
 package dev.coldhands.jersey.properties.jakarta;
 
-import dev.coldhands.jersey.properties.deserialise.Property;
-import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
-import dev.coldhands.jersey.properties.deserialise.PropertyException;
+import dev.coldhands.jersey.properties.core.deserialise.Property;
+import dev.coldhands.jersey.properties.core.deserialise.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.core.deserialise.PropertyException;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;

@@ -15,9 +15,9 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.deserialise;
+package dev.coldhands.jersey.properties.core.deserialise;
 
-import dev.coldhands.jersey.properties.resolver.PropertyResolver;
+import dev.coldhands.jersey.properties.core.resolver.PropertyResolver;
 
 import java.lang.reflect.Method;
 import java.util.List;

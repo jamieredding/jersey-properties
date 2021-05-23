@@ -17,9 +17,9 @@
 
 package dev.coldhands.jersey.properties.jakarta;
 
-import dev.coldhands.jersey.properties.deserialise.Property;
-import dev.coldhands.jersey.properties.deserialise.PropertyDeserialiser;
-import dev.coldhands.jersey.properties.resolver.PropertyResolver;
+import dev.coldhands.jersey.properties.core.deserialise.Property;
+import dev.coldhands.jersey.properties.core.deserialise.PropertyDeserialiser;
+import dev.coldhands.jersey.properties.core.resolver.PropertyResolver;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
