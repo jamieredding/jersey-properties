@@ -15,7 +15,7 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package dev.coldhands.jersey.properties.java11;
+package dev.coldhands.jersey.properties.jakarta;
 
 import java.lang.reflect.Type;
 

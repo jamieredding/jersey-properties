@@ -27,7 +27,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>jersey-properties-core</module>
-        <module>jersey-properties-java11</module>
+        <module>jersey-properties-jakarta</module>
     </modules>
 
     <properties>
