@@ -25,6 +25,16 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
+/**
+ * PropertyDeserialiser allows deserialisation of property values from
+ * a {@link PropertyResolver} using a variety of {@link Deserialiser} implementations
+ * to perform the deserialisation.
+ * <p>
+ *     It can be instantiated with {@link PropertyDeserialiser#builder(PropertyResolver)}
+ *     to provide the source of the properties and then can be further configured to change
+ *     other functionality of the class.
+ * </p>
+ */
 public class PropertyDeserialiser {
 
     private final Supplier<PropertyResolver> propertyResolverSupplier;
@@ -35,13 +45,37 @@ public class PropertyDeserialiser {
         this.deserialiserRegistries = deserialiserRegistries;
     }
 
-    // todo add overloaded method that takes Property annotation
+    /**
+     * Find a property value for the supplied property name and deserialise it
+     * to the supplied class type.
+     * @param propertyName the name of the property whose value to deserialise
+     * @param requiredType a class whose type parameter should be deserialised to
+     * @param <T> the type to deserialise to
+     * @return the deserialised property value
+     * @throws PropertyException if unable to return a deserialised property value
+     */
     public <T> T deserialise(String propertyName, Class<T> requiredType) throws PropertyException {
         final String propertyValue = lookupPropertyValue(propertyName);
 
         return deserialiseValueToCorrectType(propertyName, propertyValue, requiredType);
     }
 
+    /**
+     * Safe version of {@link PropertyDeserialiser#deserialise(String, Class)} that
+     * will return an {@link Optional} instead of throwing an exception.
+     *
+     * <p>
+     *     For example, this could be used to provide a default value for a missing property.
+<pre>
+    propertyDeserialiser.optionalDeserialise("httpPort", int.class).orElse(8080);
+</pre>
+     * </p>
+     * @param propertyName the name of the property whose value to deserialise
+     * @param requiredType a class whose type parameter should be deserialised to
+     * @param <T> the type to deserialise to
+     * @return an {@link Optional} containing the deserialised property value, or empty if
+     *          an exception was thrown
+     */
     public <T> Optional<T> optionalDeserialise(String propertyName, Class<T> requiredType) {
         try {
             return Optional.of(deserialise(propertyName, requiredType));
@@ -105,11 +139,23 @@ public class PropertyDeserialiser {
         }
     }
 
+    /**
+     * Factory method for creating a {@link PropertyDeserialiser}.
+     * @param propertyResolver the object used to look up properties
+     * @return a new {@link Builder} for a {@link PropertyDeserialiser}
+     */
     public static Builder builder(PropertyResolver propertyResolver) {
         checkNotNull(propertyResolver, "PropertyResolver");
         return new Builder(propertyResolver);
     }
 
+
+    /**
+     * Factory method for creating a {@link PropertyDeserialiser}.
+     * This allows lazy initialisation of the {@link PropertyResolver} to be used.
+     * @param propertyResolverSupplier supplier of the object used to look up properties
+     * @return a new {@link Builder} for a {@link PropertyDeserialiser}
+     */
     public static Builder builder(Supplier<PropertyResolver> propertyResolverSupplier) {
         checkNotNull(propertyResolverSupplier, "PropertyResolver");
         return new Builder(propertyResolverSupplier);
@@ -129,6 +175,18 @@ public class PropertyDeserialiser {
             this.propertyResolverSupplier = propertyResolverSupplier;
         }
 
+        /**
+         * Configure one or more {@link DeserialiserRegistry} instances to be used for
+         * deserialisation to a specific class using a {@link Deserialiser}.
+         *
+         * <p>
+         *     The first registry will be used to look up a mapping but if that class is
+         *     not supported by the registry then the next one in the order will be attempted.
+         * </p>
+         * @param deserialiserRegistries the registries to use when converting property
+         *                               values to types
+         * @return this builder
+         */
         public Builder withDeserialiserRegistries(Iterable<DeserialiserRegistry> deserialiserRegistries) {
             checkNotNull(deserialiserRegistries, "DeserialiserRegistries");
             this.deserialiserRegistries = deserialiserRegistries;

@@ -24,10 +24,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/**
+ * FileBasedPropertyResolver is a {@link PropertyResolver}
+ * implementation that currently uses {@link Properties} to
+ * look up properties from a file.
+ */
 public class FileBasedPropertyResolver implements PropertyResolver {
 
     private final Properties properties;
 
+    /**
+     * Create a new property resolver
+     * @param propertyFilePath the path to the property file to use
+     * @throws IOException if unable to read property file
+     */
     public FileBasedPropertyResolver(Path propertyFilePath) throws IOException {
         this(propertyFilePath, Files::newInputStream);
     }

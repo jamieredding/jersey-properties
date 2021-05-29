@@ -22,6 +22,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * DeserialiserRegistry provides a mapping from a Class type to
+ * a particular {@link Deserialiser} to convert from a String to
+ * an object of that Class type.
+ *
+ * <p>
+ *     There is a {@link DeserialiserRegistry#defaultRegistry()} containing
+ *     deserialiser mappings for a variety of java types.
+ * </p>
+ */
 public class DeserialiserRegistry {
 
     private static final DeserialiserRegistry DEFAULT_REGISTRY = DeserialiserRegistry.builder()
@@ -59,6 +69,11 @@ public class DeserialiserRegistry {
             .put(ZoneOffset.class, ZoneOffset::of)
             .build();
 
+    /**
+     * A preconfigured registry containing {@link Deserialiser} instances
+     * for a variety of java types.
+     * @return the default registry
+     */
     public static DeserialiserRegistry defaultRegistry() {
         return DEFAULT_REGISTRY;
     }
@@ -69,19 +84,41 @@ public class DeserialiserRegistry {
         registryConfiguration.forEach(registry::put);
     }
 
+    /**
+     * Factory method for creating a {@link DeserialiserRegistry}.
+     * @return a new {@link Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Lookup a registered {@link Deserialiser} for a particular
+     * Class type.
+     * @param clazz a class whose type should have a deserialiser in
+     *              this registry
+     * @param <T> the type which should be deserialised to
+     * @return an {@link Optional} containing a deserialiser for
+     *         the specified type or empty if that class has not been
+     *         registered
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> Optional<Deserialiser<T>> findForType(Class<T> typeName) {
-        return (Optional) Optional.ofNullable(registry.get(typeName));
+    public <T> Optional<Deserialiser<T>> findForType(Class<T> clazz) {
+        return (Optional) Optional.ofNullable(registry.get(clazz));
     }
 
     public static class Builder {
 
         private final Map<Class<?>, Deserialiser<?>> map = new HashMap<>();
 
+        /**
+         * Add a {@link Deserialiser} to class mapping to the registry
+         * @param clazz a class whose type should have a deserialiser in
+         *              this registry
+         * @param deserialiser the deserialiser to used for that class
+         * @param <T> the type which should be deserialised to
+         * @return this builder instance
+         */
         public <T> Builder put(Class<T> clazz, Deserialiser<T> deserialiser) {
             map.put(clazz, deserialiser);
             return this;

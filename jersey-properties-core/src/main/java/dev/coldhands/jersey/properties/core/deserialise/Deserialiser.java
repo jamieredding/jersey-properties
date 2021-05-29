@@ -17,8 +17,19 @@
 
 package dev.coldhands.jersey.properties.core.deserialise;
 
+/**
+ * Interface to define a class that can convert a String
+ * to a specified type.
+ * @param <T> the type that should be deserialised to
+ */
 @FunctionalInterface
 public interface Deserialiser<T> {
 
+    /**
+     * Convert a String to a specified type.
+     * @param value the String to convert
+     * @return the deserialised value
+     * @throws Exception if unable to deserialise value to that type
+     */
     T deserialise(String value) throws Exception;
 }

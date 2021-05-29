@@ -21,9 +21,25 @@ import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
+/**
+ * Interface to define a class who can lookup string property values
+ * for a given property name.
+ */
 public interface PropertyResolver {
+
+    /**
+     * Lookup a property value for a given property name.
+     * @param propertyName the name of the property to look up
+     * @return the value for the configured property or null if not found
+     */
     String getProperty(String propertyName);
 
+    /**
+     * Lookup a property value for a given property name.
+     * @param propertyName the name of the property to look up
+     * @return an {@link Optional} containing the value for the configured
+     *         property or empty if not found
+     */
     default Optional<String> getOptionalProperty(String propertyName) {
         return ofNullable(getProperty(propertyName));
     }

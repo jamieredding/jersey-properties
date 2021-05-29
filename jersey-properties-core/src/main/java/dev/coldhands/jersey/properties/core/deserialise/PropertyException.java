@@ -17,6 +17,11 @@
 
 package dev.coldhands.jersey.properties.core.deserialise;
 
+/**
+ * Base checked exception class for any exceptions that can
+ * occur while {@link PropertyDeserialiser} is processing
+ * properties.
+ */
 public class PropertyException extends Exception {
     public PropertyException(String message) {
         super(message);
