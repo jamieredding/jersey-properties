@@ -29,6 +29,7 @@
         <module>jersey-properties-core</module>
         <module>jersey-properties-jakarta</module>
         <module>manifest-test</module>
+        <module>examples</module>
     </modules>
 
     <properties>
