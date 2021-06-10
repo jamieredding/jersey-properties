@@ -17,6 +17,7 @@
 
 import com.sun.net.httpserver.HttpServer;
 import dev.coldhands.jersey.properties.core.deserialise.Property;
+import dev.coldhands.jersey.properties.core.deserialise.PropertyDeserialiser;
 import dev.coldhands.jersey.properties.jakarta.PropertyInjectionFeature;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
@@ -73,6 +74,7 @@ class JakartaExampleTest {
         assertThat(instance.runCount).isEqualTo(10);
         assertThat(instance.startDate).isEqualTo(LocalDate.of(2021, 6, 8));
         assertThat(instance.startDateString).isEqualTo("2021-06-08");
+        assertThat(instance.shouldRun).isEqualTo(true);
     }
 
     public static class MyInjectionSites {
@@ -85,12 +87,18 @@ class JakartaExampleTest {
 
         private final LocalDate startDate;
         private final String startDateString;
+        private final boolean shouldRun;
 
         // injection into constructors is also supported
         public MyInjectionSites(@Property("startDate") LocalDate startDate,
-                                @Property("startDate") String startDateString) {
+                                @Property("startDate") String startDateString,
+                                // you can inject the PropertyDeserialiser if you want to
+                                // provide a default value for a property
+                                PropertyDeserialiser propertyDeserialiser) {
             this.startDate = startDate;
             this.startDateString = startDateString;
+            this.shouldRun = propertyDeserialiser.optionalDeserialise("nonExistingProperty", boolean.class)
+                    .orElse(true);
         }
     }
 
