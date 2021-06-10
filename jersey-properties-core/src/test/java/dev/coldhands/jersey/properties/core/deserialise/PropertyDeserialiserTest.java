@@ -140,7 +140,7 @@ class PropertyDeserialiserTest {
             assertThatThrownBy(() -> underTest.deserialise("propertyName", String.class))
                     .isInstanceOf(PropertyException.class)
                     .isInstanceOf(DeserialiserException.class)
-                    .hasMessage("Exception thrown while deserialising property: propertyName=propertyValue as type: " + String.class.getTypeName())
+                    .hasMessage("Exception thrown while deserialising property: propertyName as type: " + String.class.getTypeName())
                     .getCause()
                     .hasMessage("Cannot deserialise a string.");
         }
@@ -153,7 +153,7 @@ class PropertyDeserialiserTest {
             assertThatThrownBy(() -> underTest.deserialise("invalidEnum", MyEnum.class))
                     .isInstanceOf(PropertyException.class)
                     .isInstanceOf(DeserialiserException.class)
-                    .hasMessage("Exception thrown while deserialising property: invalidEnum=" + expectedPropertyValue + " as type: " + MyEnum.class.getTypeName())
+                    .hasMessage("Exception thrown while deserialising property: invalidEnum as type: " + MyEnum.class.getTypeName())
                     .getCause()
                     .isInstanceOf(InvocationTargetException.class)
                     .getCause()

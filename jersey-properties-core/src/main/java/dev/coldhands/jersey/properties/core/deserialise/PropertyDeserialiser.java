@@ -100,7 +100,7 @@ public class PropertyDeserialiser {
             try {
                 return deserialiser.get().deserialise(propertyValue);
             } catch (Exception e) {
-                throw new DeserialiserException(propertyName, propertyValue, requiredType, e);
+                throw new DeserialiserException(propertyName, requiredType, e);
             }
         } else {
             throw new MissingDeserialiserException(requiredType);
