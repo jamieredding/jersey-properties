@@ -27,6 +27,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jersey-properties-core</artifactId>
+    <name>${project.artifactId}</name>
+    <description>Contains the core functionality including property resolving and property deserialisation.</description>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

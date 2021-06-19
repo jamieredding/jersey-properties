@@ -23,8 +23,12 @@
 
     <groupId>dev.coldhands.jersey.properties</groupId>
     <artifactId>jersey-properties</artifactId>
-    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <name>${project.artifactId}</name>
+    <description>A library to provide property lookup and injection for Jersey projects.</description>
+    <url>https://github.com/jamieredding/jersey-properties</url>
+    <packaging>pom</packaging>
+
     <modules>
         <module>jersey-properties-core</module>
         <module>jersey-properties-jakarta</module>
@@ -146,5 +150,26 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <licenses>
+        <license>
+            <name>ISC License</name>
+            <url>https://opensource.org/licenses/ISC</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Jamie Redding</name>
+            <email>jamie@coldhands.dev</email>
+            <organizationUrl>https://coldhands.dev/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/jamieredding/jersey-properties</url>
+        <connection>scm:git:git://github.com/jamieredding/jersey-properties.git</connection>
+        <developerConnection>scm:git:git@github.com:jamieredding/jersey-properties.git</developerConnection>
+    </scm>
 
 </project>

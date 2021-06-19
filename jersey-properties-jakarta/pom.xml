@@ -27,6 +27,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jersey-properties-jakarta</artifactId>
+    <name>${project.artifactId}</name>
+    <description>Includes a hk2 injection resolver and jakarta feature for integration with your Jersey application.</description>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
