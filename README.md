@@ -15,7 +15,7 @@ See below for maven coordinates and [here]() for the latest version.
 
 ```xml
 <dependency>
-    <groupId>dev.coldhands</groupId>
+    <groupId>dev.coldhands.jersey.properties</groupId>
     <artifactId>jersey-properties-core</artifactId>
 </dependency>
 ```
@@ -29,7 +29,7 @@ See below for maven coordinates and [here]() for the latest version.
 
 ```xml
 <dependency>
-    <groupId>dev.coldhands</groupId>
+    <groupId>dev.coldhands.jersey.properties</groupId>
     <artifactId>jersey-properties-jakarta</artifactId>
 </dependency>
 ```
