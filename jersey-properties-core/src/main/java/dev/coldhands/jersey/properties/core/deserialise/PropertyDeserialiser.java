@@ -69,7 +69,7 @@ public class PropertyDeserialiser {
 <pre>
     propertyDeserialiser.optionalDeserialise("httpPort", int.class).orElse(8080);
 </pre>
-     * </p>
+     *
      * @param propertyName the name of the property whose value to deserialise
      * @param requiredType a class whose type parameter should be deserialised to
      * @param <T> the type to deserialise to
