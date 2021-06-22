@@ -16,7 +16,8 @@
   ~ OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.coldhands.jersey.properties</groupId>
@@ -210,6 +211,7 @@
                         <useReleaseProfile>false</useReleaseProfile>
                         <releaseProfiles>for-release</releaseProfiles>
                         <goals>deploy</goals>
+                        <signTag>true</signTag>
                     </configuration>
                 </plugin>
             </plugins>
@@ -257,8 +259,8 @@
         <url>https://github.com/jamieredding/jersey-properties</url>
         <connection>scm:git:git://github.com/jamieredding/jersey-properties.git</connection>
         <developerConnection>scm:git:git@github.com:jamieredding/jersey-properties.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <distributionManagement>
         <snapshotRepository>
