@@ -21,7 +21,7 @@
 
     <groupId>dev.coldhands.jersey.properties</groupId>
     <artifactId>jersey-properties</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>${project.artifactId}</name>
     <description>A library to provide property lookup and injection for Jersey projects.</description>
     <url>https://github.com/jamieredding/jersey-properties</url>
@@ -257,7 +257,7 @@
         <url>https://github.com/jamieredding/jersey-properties</url>
         <connection>scm:git:git://github.com/jamieredding/jersey-properties.git</connection>
         <developerConnection>scm:git:git@github.com:jamieredding/jersey-properties.git</developerConnection>
-      <tag>1.0.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <distributionManagement>
