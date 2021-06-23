@@ -4,6 +4,10 @@ Library to provide property lookup and injection for Jersey projects.
 
 Currently, this project is targeting Java 11+.
 
+## Documentation
+
+A module with examples has been included [here](examples/src/test/java).
+
 ## Getting started
 
 ### jersey-properties-core
@@ -11,7 +15,7 @@ Currently, this project is targeting Java 11+.
 This module contains the majority of the functionality including property
 resolving and property deserialisation.
 
-See below for maven coordinates and [here]() for the latest version.
+See below for maven coordinates and [here](https://mvnrepository.com/artifact/dev.coldhands.jersey.properties/jersey-properties-core) for the latest version.
 
 ```xml
 <dependency>
@@ -25,7 +29,7 @@ See below for maven coordinates and [here]() for the latest version.
 This module depends on `jersey-properties-core` and adds a hk2 injection resolver and jakarta feature for integration
 with your jersey application.
 
-See below for maven coordinates and [here]() for the latest version.
+See below for maven coordinates and [here](https://mvnrepository.com/artifact/dev.coldhands.jersey.properties/jersey-properties-jakarta) for the latest version.
 
 ```xml
 <dependency>
@@ -52,11 +56,6 @@ This module's other dependencies are `provided` scope, so you must pull these in
     </dependency>
 </dependencies>
 ```
-
-## Documentation
-
-A module with examples has been included [here](examples/src/test/java) 
-and javadoc can be found [here]().
 
 ## Building this project
 
