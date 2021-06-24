@@ -22,6 +22,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.time.*;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -100,7 +102,9 @@ class DeserialiserRegistryTest {
                 arguments(YearMonth.class, "2021-05", YearMonth.of(2021, 5)),
                 arguments(ZonedDateTime.class, "2021-05-10T19:50:08.419688569+01:00[Europe/London]", ZonedDateTime.of(2021, 5, 10, 19, 50, 8, 419688569, ZoneId.of("Europe/London"))),
                 arguments(ZoneId.class, "Europe/London", ZoneId.of("Europe/London")),
-                arguments(ZoneOffset.class, "+10:00", ZoneOffset.ofHours(10))
+                arguments(ZoneOffset.class, "+10:00", ZoneOffset.ofHours(10)),
+                arguments(Path.class, Path.of("a").resolve("b").toString(), Path.of("a").resolve("b")),
+                arguments(File.class, "file.txt", new File("file.txt"))
         );
     }
 }

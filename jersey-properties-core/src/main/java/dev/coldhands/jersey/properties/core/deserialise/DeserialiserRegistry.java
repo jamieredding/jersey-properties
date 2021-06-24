@@ -17,6 +17,8 @@
 
 package dev.coldhands.jersey.properties.core.deserialise;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.time.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +69,8 @@ public class DeserialiserRegistry {
             .put(ZonedDateTime.class, ZonedDateTime::parse)
             .put(ZoneId.class, ZoneId::of)
             .put(ZoneOffset.class, ZoneOffset::of)
+            .put(Path.class, Path::of)
+            .put(File.class, File::new)
             .build();
 
     /**
