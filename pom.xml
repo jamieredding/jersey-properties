@@ -42,7 +42,7 @@
 
         <jersey.version>3.0.8</jersey.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-        <junit-jupiter.version>5.9.0</junit-jupiter.version>
+        <junit-jupiter.version>5.9.1</junit-jupiter.version>
         <assertj.version>3.23.1</assertj.version>
         <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
         <hk2-api.version>3.0.3</hk2-api.version>
