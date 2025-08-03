@@ -45,7 +45,7 @@
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <assertj.version>3.25.3</assertj.version>
         <jakarta.activation-api.version>2.1.3</jakarta.activation-api.version>
-        <hk2-api.version>3.1.0</hk2-api.version>
+        <hk2-api.version>3.1.1</hk2-api.version>
 
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.1.2</maven-failsafe-plugin.version>
