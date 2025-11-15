@@ -41,7 +41,7 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <jersey.version>3.1.11</jersey.version>
-        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
+        <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <junit-jupiter.version>5.14.1</junit-jupiter.version>
         <assertj.version>3.27.6</assertj.version>
         <jakarta.activation-api.version>2.1.4</jakarta.activation-api.version>
